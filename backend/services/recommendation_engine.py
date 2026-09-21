@@ -142,13 +142,30 @@ def calculate_skill_gap(role_id: str, user_skills: List[str]) -> Dict[str, Any]:
         "recommendations": recommendations_list
     }
 
-def calculate_job_match(required_skills: List[str], user_skills: List[str]) -> int:
+def calculate_job_match_details(required_skills: List[str], user_skills: List[str]) -> Dict[str, Any]:
     if not required_skills:
-        return 75
-    user_skills_set = set(s.strip().lower() for s in user_skills if s)
-    matched = sum(1 for req in required_skills if req.strip().lower() in user_skills_set)
-    ratio = matched / len(required_skills) if required_skills else 0
+        return {"match_score": 75, "matched_skills": [], "missing_skills": []}
     
-    # Calculate score between 35% and 98%
+    user_skills_set = set(s.strip().lower() for s in user_skills if s)
+    matched = []
+    missing = []
+    
+    for req in required_skills:
+        req_clean = req.strip().lower()
+        if req_clean in user_skills_set or any(req_clean in u or u in req_clean for u in user_skills_set):
+            matched.append(req)
+        else:
+            missing.append(req)
+
+    ratio = len(matched) / len(required_skills) if required_skills else 0.0
     score = int(round(35 + (ratio * 60)))
-    return min(max(score, 35), 98)
+    score = min(max(score, 35), 98)
+
+    return {
+        "match_score": score,
+        "matched_skills": matched,
+        "missing_skills": missing
+    }
+
+def calculate_job_match(required_skills: List[str], user_skills: List[str]) -> int:
+    return calculate_job_match_details(required_skills, user_skills)["match_score"]

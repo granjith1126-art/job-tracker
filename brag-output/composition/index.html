@@ -1,0 +1,1372 @@
+<!doctype html>
+<html lang="en" data-resolution="landscape">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>CareerAI Job Tracker Demo</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html, body {
+        margin: 0;
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: #090d16;
+        color: #f8fafc;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+      #root {
+        width: 1920px;
+        height: 1080px;
+        position: relative;
+        background: radial-gradient(circle at 50% 20%, rgba(30, 41, 59, 0.7) 0%, rgba(9, 13, 22, 1) 80%);
+        overflow: hidden;
+      }
+
+      /* Ambient Glow Backgrounds */
+      .ambient-glow {
+        position: absolute;
+        border-radius: 50%;
+        filter: blur(120px);
+        pointer-events: none;
+        opacity: 0.35;
+      }
+      .glow-1 {
+        width: 600px;
+        height: 600px;
+        background: #6366f1;
+        top: -150px;
+        left: 20%;
+      }
+      .glow-2 {
+        width: 500px;
+        height: 500px;
+        background: #8b5cf6;
+        bottom: -100px;
+        right: 20%;
+      }
+      .glow-3 {
+        width: 400px;
+        height: 400px;
+        background: #06b6d4;
+        top: 40%;
+        left: 60%;
+        opacity: 0.2;
+      }
+
+      /* Base Scene Container */
+      .clip {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 1920px;
+        height: 1080px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        padding: 60px 80px;
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      /* Common Navbar */
+      .top-nav {
+        position: absolute;
+        top: 30px;
+        left: 80px;
+        right: 80px;
+        height: 70px;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 32px;
+        background: rgba(15, 23, 42, 0.75);
+        backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 20px;
+        z-index: 100;
+      }
+      .brand-logo {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 24px;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        color: #ffffff;
+      }
+      .brand-icon {
+        width: 38px;
+        height: 38px;
+        background: linear-gradient(135deg, #6366f1, #8b5cf6);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-size: 20px;
+        box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4);
+      }
+      .nav-links {
+        display: flex;
+        align-items: center;
+        gap: 28px;
+        font-size: 15px;
+        font-weight: 500;
+        color: #94a3b8;
+      }
+      .nav-links span.active {
+        color: #818cf8;
+        font-weight: 600;
+        position: relative;
+      }
+      .nav-links span.active::after {
+        content: '';
+        position: absolute;
+        bottom: -6px;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: #818cf8;
+        border-radius: 2px;
+      }
+      .user-profile {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .user-avatar {
+        width: 36px;
+        height: 36px;
+        background: linear-gradient(135deg, #10b981, #06b6d4);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 14px;
+      }
+
+      /* Badges & Pills */
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 16px;
+        border-radius: 100px;
+        font-size: 13px;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+      .badge-indigo {
+        background: rgba(99, 102, 241, 0.15);
+        color: #a5b4fc;
+        border: 1px solid rgba(99, 102, 241, 0.35);
+      }
+      .badge-emerald {
+        background: rgba(16, 185, 129, 0.15);
+        color: #6ee7b7;
+        border: 1px solid rgba(16, 185, 129, 0.35);
+      }
+      .badge-purple {
+        background: rgba(139, 92, 246, 0.15);
+        color: #c4b5fd;
+        border: 1px solid rgba(139, 92, 246, 0.35);
+      }
+      .badge-amber {
+        background: rgba(245, 158, 11, 0.15);
+        color: #fcd34d;
+        border: 1px solid rgba(245, 158, 11, 0.35);
+      }
+
+      /* Glass Card */
+      .glass-card {
+        background: rgba(15, 23, 42, 0.8);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 20px;
+        padding: 28px;
+        box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5);
+      }
+
+      /* Scene 1: Intro */
+      #scene-1 {
+        text-align: center;
+        gap: 28px;
+      }
+      .hero-title {
+        font-size: 78px;
+        font-weight: 800;
+        line-height: 1.08;
+        letter-spacing: -0.03em;
+        background: linear-gradient(135deg, #ffffff 30%, #a5b4fc 70%, #818cf8 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        max-width: 1200px;
+      }
+      .hero-subtitle {
+        font-size: 26px;
+        font-weight: 400;
+        color: #94a3b8;
+        max-width: 850px;
+        line-height: 1.45;
+      }
+      .feature-chips {
+        display: flex;
+        gap: 20px;
+        margin-top: 15px;
+      }
+      .chip-card {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 14px 24px;
+        background: rgba(30, 41, 59, 0.6);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 14px;
+        font-size: 16px;
+        font-weight: 600;
+        color: #e2e8f0;
+      }
+
+      /* Scene 2: Dashboard */
+      #scene-2 {
+        align-items: stretch;
+        justify-content: flex-start;
+        padding-top: 130px;
+      }
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 24px;
+        margin-bottom: 28px;
+      }
+      .stat-card {
+        background: rgba(15, 23, 42, 0.85);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 18px;
+        padding: 24px;
+        position: relative;
+        overflow: hidden;
+      }
+      .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 3px;
+        background: linear-gradient(90deg, #6366f1, #8b5cf6);
+      }
+      .stat-label {
+        font-size: 14px;
+        font-weight: 600;
+        color: #94a3b8;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 12px;
+      }
+      .stat-num {
+        font-size: 48px;
+        font-weight: 800;
+        color: #ffffff;
+        letter-spacing: -0.02em;
+        line-height: 1;
+      }
+      .stat-sub {
+        font-size: 13px;
+        color: #10b981;
+        margin-top: 8px;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+      }
+      .dashboard-body {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 24px;
+        height: 480px;
+      }
+      .activity-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 16px 20px;
+        background: rgba(30, 41, 59, 0.4);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 12px;
+        margin-bottom: 12px;
+      }
+
+      /* Scene 3: Job Discovery */
+      #scene-3 {
+        align-items: stretch;
+        justify-content: flex-start;
+        padding-top: 130px;
+      }
+      .search-bar-wrap {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        background: rgba(15, 23, 42, 0.85);
+        border: 1px solid rgba(99, 102, 241, 0.4);
+        border-radius: 16px;
+        padding: 16px 24px;
+        margin-bottom: 24px;
+        box-shadow: 0 0 25px rgba(99, 102, 241, 0.15);
+      }
+      .search-input-text {
+        font-size: 20px;
+        color: #ffffff;
+        font-weight: 500;
+        flex: 1;
+      }
+      .job-cards-list {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 24px;
+      }
+      .job-card {
+        background: rgba(15, 23, 42, 0.85);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 20px;
+        padding: 28px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        height: 440px;
+        position: relative;
+      }
+      .job-card.featured {
+        border-color: rgba(99, 102, 241, 0.6);
+        box-shadow: 0 10px 30px rgba(99, 102, 241, 0.2);
+      }
+      .job-company {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+      }
+      .company-logo {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        background: #1e293b;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+        font-size: 18px;
+      }
+      .btn-add-tracker {
+        width: 100%;
+        padding: 14px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #6366f1, #8b5cf6);
+        color: #fff;
+        font-size: 15px;
+        font-weight: 600;
+        text-align: center;
+        border: none;
+        cursor: pointer;
+        box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4);
+      }
+      .toast-notification {
+        position: absolute;
+        bottom: 50px;
+        right: 80px;
+        background: rgba(16, 185, 129, 0.95);
+        color: #ffffff;
+        padding: 16px 28px;
+        border-radius: 14px;
+        font-size: 16px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        box-shadow: 0 10px 30px rgba(16, 185, 129, 0.35);
+        opacity: 0;
+        transform: translateY(20px);
+      }
+
+      /* Scene 4: Kanban Board */
+      #scene-4 {
+        align-items: stretch;
+        justify-content: flex-start;
+        padding-top: 130px;
+      }
+      .kanban-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 24px;
+        height: 560px;
+      }
+      .kanban-col {
+        background: rgba(15, 23, 42, 0.6);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 18px;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+      .kanban-col-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 15px;
+        font-weight: 700;
+        color: #94a3b8;
+        padding-bottom: 12px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      }
+      .kanban-card {
+        background: rgba(30, 41, 59, 0.7);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 14px;
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      /* Scene 5: Analytics & Skill Radar */
+      #scene-5 {
+        align-items: stretch;
+        justify-content: flex-start;
+        padding-top: 130px;
+      }
+      .analytics-wrap {
+        display: grid;
+        grid-template-columns: 1.1fr 1fr;
+        gap: 32px;
+        height: 550px;
+      }
+      .radar-canvas-wrap {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+      }
+      .accounts-strip {
+        display: flex;
+        gap: 16px;
+        margin-top: 24px;
+      }
+      .account-pill {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 20px;
+        background: rgba(30, 41, 59, 0.5);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 12px;
+        font-size: 14px;
+        font-weight: 600;
+      }
+
+      /* Scene 6: AI Mock Interview */
+      #scene-6 {
+        align-items: stretch;
+        justify-content: flex-start;
+        padding-top: 130px;
+      }
+      .interview-room {
+        display: grid;
+        grid-template-columns: 360px 1fr;
+        gap: 32px;
+        height: 560px;
+      }
+      .interviewer-sidebar {
+        background: rgba(15, 23, 42, 0.85);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 20px;
+        padding: 32px 24px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: 20px;
+      }
+      .aira-avatar {
+        width: 110px;
+        height: 110px;
+        border-radius: 50%;
+        background: radial-gradient(circle at 30% 30%, #818cf8, #4338ca);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 48px;
+        box-shadow: 0 0 35px rgba(99, 102, 241, 0.5);
+        position: relative;
+      }
+      .wave-bars {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        height: 36px;
+      }
+      .wave-bar {
+        width: 4px;
+        background: #818cf8;
+        border-radius: 2px;
+        height: 8px;
+      }
+      .chat-dialog-panel {
+        background: rgba(15, 23, 42, 0.85);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 20px;
+        padding: 32px;
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+        overflow: hidden;
+      }
+      .message-bubble {
+        padding: 20px 24px;
+        border-radius: 18px;
+        max-width: 85%;
+        line-height: 1.5;
+        font-size: 16px;
+      }
+      .msg-aira {
+        background: rgba(30, 41, 59, 0.7);
+        border: 1px solid rgba(99, 102, 241, 0.3);
+        align-self: flex-start;
+      }
+      .msg-user {
+        background: linear-gradient(135deg, rgba(99, 102, 241, 0.25), rgba(139, 92, 246, 0.25));
+        border: 1px solid rgba(139, 92, 246, 0.4);
+        align-self: flex-end;
+      }
+
+      /* Scene 7: Technical Coding Round */
+      #scene-7 {
+        align-items: stretch;
+        justify-content: flex-start;
+        padding-top: 130px;
+      }
+      .code-practice-layout {
+        display: grid;
+        grid-template-columns: 1fr 1.4fr;
+        gap: 28px;
+        height: 560px;
+      }
+      .code-editor-box {
+        background: #0d111a;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 20px;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        font-family: 'JetBrains Mono', monospace;
+      }
+      .editor-tab-bar {
+        height: 48px;
+        background: #161c2b;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 20px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      }
+      .editor-lines {
+        padding: 20px 24px;
+        font-size: 14px;
+        line-height: 1.55;
+        color: #e2e8f0;
+        flex: 1;
+        overflow: hidden;
+      }
+      .btn-run-code {
+        padding: 8px 20px;
+        border-radius: 8px;
+        background: #047857;
+        color: #ffffff;
+        font-weight: 700;
+        font-size: 14px;
+        border: 1px solid #10b981;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .test-case-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 14px 18px;
+        background: rgba(30, 41, 59, 0.5);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 10px;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 14px;
+        margin-bottom: 10px;
+      }
+
+      /* Scene 8: Interview Feedback Report */
+      #scene-8 {
+        align-items: stretch;
+        justify-content: flex-start;
+        padding-top: 130px;
+      }
+      .feedback-layout {
+        display: grid;
+        grid-template-columns: 380px 1fr;
+        gap: 32px;
+        height: 560px;
+      }
+      .score-circle-card {
+        background: rgba(15, 23, 42, 0.85);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 20px;
+        padding: 36px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        gap: 16px;
+      }
+      .score-ring {
+        width: 170px;
+        height: 170px;
+        border-radius: 50%;
+        border: 10px solid #6366f1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 0 35px rgba(99, 102, 241, 0.35);
+      }
+
+      /* Scene 9: Final Wrap Up */
+      #scene-9 {
+        text-align: center;
+        gap: 32px;
+      }
+      .final-brand-stamp {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 20px;
+        margin-bottom: 8px;
+      }
+      .final-logo-icon {
+        width: 72px;
+        height: 72px;
+        background: linear-gradient(135deg, #6366f1, #8b5cf6);
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 38px;
+        box-shadow: 0 10px 30px rgba(99, 102, 241, 0.5);
+      }
+      .final-cta-btn {
+        padding: 18px 48px;
+        background: linear-gradient(135deg, #6366f1, #8b5cf6);
+        color: #ffffff;
+        font-size: 20px;
+        font-weight: 700;
+        border-radius: 16px;
+        box-shadow: 0 8px 30px rgba(99, 102, 241, 0.4);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+      }
+    </style>
+  </head>
+  <body>
+    <div
+      id="root"
+      data-composition-id="main"
+      data-start="0"
+      data-duration="120"
+      data-width="1920"
+      data-height="1080"
+    >
+      <!-- Ambient Glows (marked for intentional canvas overflow) -->
+      <div class="ambient-glow glow-1" data-layout-allow-overflow="true"></div>
+      <div class="ambient-glow glow-2" data-layout-allow-overflow="true"></div>
+      <div class="ambient-glow glow-3" data-layout-allow-overflow="true"></div>
+
+      <!-- Top Nav -->
+      <header class="top-nav clip" id="persistent-nav" data-start="7" data-duration="106">
+        <div class="brand-logo">
+          <div class="brand-icon">⚡</div>
+          <span>CareerAI</span>
+        </div>
+        <div class="nav-links">
+          <span id="nav-dash" class="active">Dashboard</span>
+          <span id="nav-jobs">Job Discovery</span>
+          <span id="nav-tracker">Tracker</span>
+          <span id="nav-analytics">Career Radar</span>
+          <span id="nav-interview">AI Mock Interview</span>
+          <span id="nav-code">Code Practice</span>
+        </div>
+        <div class="user-profile">
+          <div class="badge badge-emerald">PRO MEMBER</div>
+          <div class="user-avatar">AC</div>
+        </div>
+      </header>
+
+      <!-- AUDIO TRACKS -->
+      <!-- Background Music -->
+      <audio id="bg-music" src="assets/music/music.mp3" data-start="0" data-duration="120" data-volume="0.16"></audio>
+
+      <!-- Voiceover Clips -->
+      <audio id="voice-scene-1" src="assets/voice/scene_1_intro.mp3" data-start="0.5" data-duration="6.41" data-volume="1.0"></audio>
+      <audio id="voice-scene-2" src="assets/voice/scene_2_dashboard.mp3" data-start="7.5" data-duration="7.03" data-volume="1.0"></audio>
+      <audio id="voice-scene-3" src="assets/voice/scene_3_find_job.mp3" data-start="17.5" data-duration="6.77" data-volume="1.0"></audio>
+      <audio id="voice-scene-4" src="assets/voice/scene_4_track.mp3" data-start="32.5" data-duration="6.46" data-volume="1.0"></audio>
+      <audio id="voice-scene-5" src="assets/voice/scene_5_analytics.mp3" data-start="45.5" data-duration="5.98" data-volume="1.0"></audio>
+      <audio id="voice-scene-6" src="assets/voice/scene_6_mock_interview.mp3" data-start="55.5" data-duration="7.18" data-volume="1.0"></audio>
+      <audio id="voice-scene-7" src="assets/voice/scene_7_technical_round.mp3" data-start="78.5" data-duration="6.91" data-volume="1.0"></audio>
+      <audio id="voice-scene-8" src="assets/voice/scene_8_feedback.mp3" data-start="103.5" data-duration="6.36" data-volume="1.0"></audio>
+      <audio id="voice-scene-9" src="assets/voice/scene_9_outro.mp3" data-start="113.5" data-duration="4.56" data-volume="1.0"></audio>
+
+      <!-- SFX Audio Cues -->
+      <audio id="sfx-intro-impact" src="assets/sfx/impactSoft_medium_001.ogg" data-start="0.1" data-duration="0.18" data-volume="0.4"></audio>
+      <audio id="sfx-dash-click" src="assets/sfx/click_001.ogg" data-start="7.2" data-duration="0.10" data-volume="0.3"></audio>
+      <audio id="sfx-job-select" src="assets/sfx/select_008.ogg" data-start="18.0" data-duration="0.05" data-volume="0.3"></audio>
+      <audio id="sfx-job-click" src="assets/sfx/click_001.ogg" data-start="24.0" data-duration="0.10" data-volume="0.4"></audio>
+      <audio id="sfx-kanban-switch" src="assets/sfx/switch_001.ogg" data-start="36.0" data-duration="0.62" data-volume="0.4"></audio>
+      <audio id="sfx-analytics-select" src="assets/sfx/select_008.ogg" data-start="46.0" data-duration="0.05" data-volume="0.3"></audio>
+      <audio id="sfx-interview-click" src="assets/sfx/click_001.ogg" data-start="56.5" data-duration="0.10" data-volume="0.3"></audio>
+      <audio id="sfx-code-switch" src="assets/sfx/switch_001.ogg" data-start="83.0" data-duration="0.62" data-volume="0.4"></audio>
+      <audio id="sfx-feedback-select" src="assets/sfx/select_008.ogg" data-start="104.0" data-duration="0.05" data-volume="0.3"></audio>
+      <audio id="sfx-outro-bell" src="assets/sfx/impactBell_heavy_000.ogg" data-start="114.5" data-duration="1.48" data-volume="0.6"></audio>
+
+      <!-- ================= SCENE 1: INTRO (0 - 7s) ================= -->
+      <section class="clip" id="scene-1" data-start="0" data-duration="7">
+        <div class="badge badge-indigo" id="s1-badge">AI-POWERED CAREER COMMAND CENTER</div>
+        <h1 class="hero-title" id="s1-title">Land Your Dream Tech Role With CareerAI</h1>
+        <p class="hero-subtitle" id="s1-sub">
+          The all-in-one AI career co-pilot: Discover live jobs, track your pipeline, practice real-time technical interviews, and accelerate your path to an offer.
+        </p>
+        <div class="feature-chips" id="s1-chips">
+          <div class="chip-card"><span>🔍</span> Live Job Radar</div>
+          <div class="chip-card"><span>📋</span> Kanban Tracker</div>
+          <div class="chip-card"><span>🎙️</span> Aira AI Mock Interview</div>
+          <div class="chip-card"><span>💻</span> Code Practice Runner</div>
+        </div>
+      </section>
+
+      <!-- ================= SCENE 2: LOGIN & DASHBOARD (7 - 17s) ================= -->
+      <section class="clip" id="scene-2" data-start="7" data-duration="10">
+        <div class="stats-grid">
+          <div class="stat-card" id="s2-card-1">
+            <div class="stat-label">Total Applications</div>
+            <div class="stat-num" id="s2-num-1">12</div>
+            <div class="stat-sub">↑ +3 this week</div>
+          </div>
+          <div class="stat-card" id="s2-card-2">
+            <div class="stat-label">Interviews Scheduled</div>
+            <div class="stat-num" id="s2-num-2">4</div>
+            <div class="stat-sub">↑ Stripe, Datadog next</div>
+          </div>
+          <div class="stat-card" id="s2-card-3">
+            <div class="stat-label">Job Offers</div>
+            <div class="stat-num" id="s2-num-3" style="color: #34d399;">2</div>
+            <div class="stat-sub">🎉 $165k Base Target</div>
+          </div>
+          <div class="stat-card" id="s2-card-4">
+            <div class="stat-label">Rejections</div>
+            <div class="stat-num" id="s2-num-4" style="color: #f87171;">3</div>
+            <div class="stat-sub" style="color: #94a3b8;">Refined with AI</div>
+          </div>
+        </div>
+
+        <div class="dashboard-body">
+          <div class="glass-card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+              <h3 style="font-size: 18px; font-weight: 700;">Recent Pipeline Activity</h3>
+              <span class="badge badge-purple">Real-time Feed</span>
+            </div>
+            <div class="activity-item">
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <div style="width: 10px; height: 10px; border-radius: 50%; background: #10b981;"></div>
+                <div>
+                  <div style="font-weight: 600; font-size: 15px;">Stripe • Senior Full-Stack Engineer</div>
+                  <div style="color: #94a3b8; font-size: 13px;">Technical Round Scheduled for Thursday</div>
+                </div>
+              </div>
+              <span class="badge badge-emerald">Round 2</span>
+            </div>
+            <div class="activity-item">
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <div style="width: 10px; height: 10px; border-radius: 50%; background: #6366f1;"></div>
+                <div>
+                  <div style="font-weight: 600; font-size: 15px;">Datadog • Cloud Solutions Architect</div>
+                  <div style="color: #94a3b8; font-size: 13px;">Application Submitted via RemoteOK</div>
+                </div>
+              </div>
+              <span class="badge badge-indigo">Applied</span>
+            </div>
+            <div class="activity-item">
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <div style="width: 10px; height: 10px; border-radius: 50%; background: #f59e0b;"></div>
+                <div>
+                  <div style="font-weight: 600; font-size: 15px;">Aira AI Mock Interview Completed</div>
+                  <div style="color: #94a3b8; font-size: 13px;">Overall System Design Score: 93/100</div>
+                </div>
+              </div>
+              <span class="badge badge-amber">Completed</span>
+            </div>
+          </div>
+
+          <div class="glass-card" style="display: flex; flex-direction: column; justify-content: space-between;">
+            <div>
+              <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 8px;">Weekly Goal Progress</h3>
+              <p style="font-size: 14px; color: #94a3b8;">5 Applications & 2 Mock Sessions / wk</p>
+            </div>
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 14px; margin: 20px 0;">
+              <div style="font-size: 56px; font-weight: 800; color: #818cf8;">85%</div>
+              <div class="badge badge-indigo">ON TRACK TO EXCEED</div>
+            </div>
+            <div style="font-size: 13px; color: #94a3b8; text-align: center;">Targeting $150k+ Remote Roles</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= SCENE 3: JOB DISCOVERY (17 - 32s) ================= -->
+      <section class="clip" id="scene-3" data-start="17" data-duration="15">
+        <div class="search-bar-wrap" id="s3-search">
+          <span style="font-size: 22px;">🔍</span>
+          <span class="search-input-text">Senior Full-Stack Engineer</span>
+          <div style="display: flex; gap: 10px;">
+            <span class="badge badge-emerald">Remote Only</span>
+            <span class="badge badge-indigo">&gt; $140,000</span>
+            <span class="badge badge-purple">AI Match &gt; 90%</span>
+          </div>
+        </div>
+
+        <div class="job-cards-list">
+          <!-- Job 1: Stripe (Featured) -->
+          <div class="job-card featured" id="s3-card-stripe">
+            <div>
+              <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
+                <div class="job-company">
+                  <div class="company-logo" style="color: #6366f1; background: rgba(99, 102, 241, 0.15);">S</div>
+                  <div>
+                    <h4 style="font-size: 20px; font-weight: 700;">Stripe</h4>
+                    <span style="font-size: 13px; color: #94a3b8;">San Francisco, CA • Remote</span>
+                  </div>
+                </div>
+                <span class="badge badge-emerald">96% AI MATCH</span>
+              </div>
+              <h3 style="font-size: 22px; font-weight: 700; margin-bottom: 8px;">Senior Full-Stack Engineer</h3>
+              <p style="font-size: 18px; font-weight: 700; color: #38bdf8; margin-bottom: 16px;">$150,000 – $185,000 / yr</p>
+              <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px;">
+                <span style="background: #1e293b; padding: 4px 10px; border-radius: 6px; font-size: 12px;">React</span>
+                <span style="background: #1e293b; padding: 4px 10px; border-radius: 6px; font-size: 12px;">Python</span>
+                <span style="background: #1e293b; padding: 4px 10px; border-radius: 6px; font-size: 12px;">AWS</span>
+                <span style="background: #1e293b; padding: 4px 10px; border-radius: 6px; font-size: 12px;">Microservices</span>
+              </div>
+            </div>
+            <button class="btn-add-tracker" id="s3-btn-add">✓ Add to Application Tracker</button>
+          </div>
+
+          <!-- Job 2: Datadog -->
+          <div class="job-card">
+            <div>
+              <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
+                <div class="job-company">
+                  <div class="company-logo" style="color: #8b5cf6; background: rgba(139, 92, 246, 0.15);">D</div>
+                  <div>
+                    <h4 style="font-size: 20px; font-weight: 700;">Datadog</h4>
+                    <span style="font-size: 13px; color: #94a3b8;">New York, NY • Remote</span>
+                  </div>
+                </div>
+                <span class="badge badge-indigo">92% AI MATCH</span>
+              </div>
+              <h3 style="font-size: 22px; font-weight: 700; margin-bottom: 8px;">Cloud Systems Engineer</h3>
+              <p style="font-size: 18px; font-weight: 700; color: #38bdf8; margin-bottom: 16px;">$145,000 – $175,000 / yr</p>
+              <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px;">
+                <span style="background: #1e293b; padding: 4px 10px; border-radius: 6px; font-size: 12px;">Kubernetes</span>
+                <span style="background: #1e293b; padding: 4px 10px; border-radius: 6px; font-size: 12px;">Go</span>
+                <span style="background: #1e293b; padding: 4px 10px; border-radius: 6px; font-size: 12px;">Distributed Systems</span>
+              </div>
+            </div>
+            <button class="btn-add-tracker" style="background: #334155;">Tracked</button>
+          </div>
+
+          <!-- Job 3: Vercel -->
+          <div class="job-card">
+            <div>
+              <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
+                <div class="job-company">
+                  <div class="company-logo" style="color: #06b6d4; background: rgba(6, 182, 212, 0.15);">▲</div>
+                  <div>
+                    <h4 style="font-size: 20px; font-weight: 700;">Vercel</h4>
+                    <span style="font-size: 13px; color: #94a3b8;">Global • Remote</span>
+                  </div>
+                </div>
+                <span class="badge badge-purple">94% AI MATCH</span>
+              </div>
+              <h3 style="font-size: 22px; font-weight: 700; margin-bottom: 8px;">Frontend Platform Architect</h3>
+              <p style="font-size: 18px; font-weight: 700; color: #38bdf8; margin-bottom: 16px;">$160,000 – $190,000 / yr</p>
+              <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px;">
+                <span style="background: #1e293b; padding: 4px 10px; border-radius: 6px; font-size: 12px;">Next.js</span>
+                <span style="background: #1e293b; padding: 4px 10px; border-radius: 6px; font-size: 12px;">TypeScript</span>
+                <span style="background: #1e293b; padding: 4px 10px; border-radius: 6px; font-size: 12px;">Edge Runtime</span>
+              </div>
+            </div>
+            <button class="btn-add-tracker" style="background: #334155;">Tracked</button>
+          </div>
+        </div>
+
+        <div class="toast-notification" id="s3-toast">
+          <span>✓</span>
+          <span>Stripe application successfully saved to Kanban Tracker!</span>
+        </div>
+      </section>
+
+      <!-- ================= SCENE 4: KANBAN PIPELINE (32 - 45s) ================= -->
+      <section class="clip" id="scene-4" data-start="32" data-duration="13" data-layout-allow-overlap="true">
+        <div class="kanban-grid" data-layout-allow-overlap="true">
+          <!-- Col 1: Wishlist -->
+          <div class="kanban-col">
+            <div class="kanban-col-header">
+              <span>WISHLIST</span>
+              <span class="badge badge-indigo">3</span>
+            </div>
+            <div class="kanban-card">
+              <div style="font-weight: 700; font-size: 16px;">Airbnb</div>
+              <div style="font-size: 13px; color: #94a3b8;">Staff Engineer • $190k</div>
+            </div>
+            <div class="kanban-card">
+              <div style="font-weight: 700; font-size: 16px;">GitHub</div>
+              <div style="font-size: 13px; color: #94a3b8;">Platform Engineer • $160k</div>
+            </div>
+          </div>
+
+          <!-- Col 2: Applied -->
+          <div class="kanban-col" id="s4-col-applied">
+            <div class="kanban-col-header">
+              <span>APPLIED</span>
+              <span class="badge badge-indigo">2</span>
+            </div>
+            <!-- Animated Moving Card -->
+            <div class="kanban-card" id="s4-moving-card" data-layout-allow-overlap="true" style="border-color: #818cf8; box-shadow: 0 0 20px rgba(99, 102, 241, 0.3);">
+              <div data-layout-allow-overlap="true" style="display: flex; justify-content: space-between; align-items: center;">
+                <span data-layout-allow-overlap="true" style="font-weight: 800; font-size: 17px; color: #fff;">Stripe</span>
+                <span data-layout-allow-overlap="true" class="badge badge-emerald">96% MATCH</span>
+              </div>
+              <div data-layout-allow-overlap="true" style="font-size: 14px; color: #cbd5e1; font-weight: 600;">Senior Full-Stack Engineer</div>
+              <div data-layout-allow-overlap="true" style="font-size: 12px; color: #38bdf8;">$150k - $185k • Remote</div>
+              <div data-layout-allow-overlap="true" style="font-size: 11px; color: #94a3b8; margin-top: 4px;">Applied 2 days ago</div>
+            </div>
+            <div class="kanban-card">
+              <div style="font-weight: 700; font-size: 16px;">Vercel</div>
+              <div style="font-size: 13px; color: #94a3b8;">Platform Architect • $170k</div>
+            </div>
+          </div>
+
+          <!-- Col 3: Interviewing -->
+          <div class="kanban-col" id="s4-col-interviewing" data-layout-allow-overlap="true">
+            <div class="kanban-col-header" data-layout-allow-overlap="true">
+              <span data-layout-allow-overlap="true">INTERVIEWING</span>
+              <span class="badge badge-purple" id="s4-badge-interview-count" data-layout-allow-overlap="true">4</span>
+            </div>
+            <div class="kanban-card" data-layout-allow-overlap="true">
+              <div data-layout-allow-overlap="true" style="display: flex; justify-content: space-between;">
+                <span data-layout-allow-overlap="true" style="font-weight: 700; font-size: 16px;">Datadog</span>
+                <span data-layout-allow-overlap="true" class="badge badge-purple">ROUND 3</span>
+              </div>
+              <div data-layout-allow-overlap="true" style="font-size: 13px; color: #94a3b8;">Cloud Systems Engineer</div>
+            </div>
+            <div class="kanban-card" data-layout-allow-overlap="true">
+              <div data-layout-allow-overlap="true" style="display: flex; justify-content: space-between;">
+                <span data-layout-allow-overlap="true" style="font-weight: 700; font-size: 16px;">Linear</span>
+                <span data-layout-allow-overlap="true" class="badge badge-purple">TECH SCREEN</span>
+              </div>
+              <div data-layout-allow-overlap="true" style="font-size: 13px; color: #94a3b8;">Senior Product Engineer</div>
+            </div>
+          </div>
+
+          <!-- Col 4: Offer -->
+          <div class="kanban-col">
+            <div class="kanban-col-header">
+              <span>OFFER</span>
+              <span class="badge badge-emerald">2</span>
+            </div>
+            <div class="kanban-card" style="border-color: rgba(16, 185, 129, 0.4); background: rgba(16, 185, 129, 0.1);">
+              <div style="font-weight: 800; font-size: 16px; color: #6ee7b7;">Supabase</div>
+              <div style="font-size: 13px; color: #e2e8f0; font-weight: 600;">$165,000 Base Offer</div>
+              <div style="font-size: 11px; color: #10b981; margin-top: 4px;">Accepted / Finalizing</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= SCENE 5: CAREER RADAR & ANALYTICS (45 - 55s) ================= -->
+      <section class="clip" id="scene-5" data-start="45" data-duration="10">
+        <div class="analytics-wrap">
+          <!-- Left: Radar Polygon -->
+          <div class="glass-card radar-canvas-wrap">
+            <h3 style="font-size: 20px; font-weight: 700; margin-bottom: 24px; width: 100%;">Market Skill Vector Alignment</h3>
+            <svg width="380" height="340" viewBox="0 0 400 400">
+              <!-- Web Polygons -->
+              <polygon points="200,40 340,120 340,280 200,360 60,280 60,120" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="2"/>
+              <polygon points="200,80 305,140 305,260 200,320 95,260 95,140" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="2"/>
+              <polygon points="200,120 270,160 270,240 200,280 130,240 130,160" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="2"/>
+              
+              <!-- Axes -->
+              <line x1="200" y1="200" x2="200" y2="40" stroke="rgba(255,255,255,0.1)"/>
+              <line x1="200" y1="200" x2="340" y2="120" stroke="rgba(255,255,255,0.1)"/>
+              <line x1="200" y1="200" x2="340" y2="280" stroke="rgba(255,255,255,0.1)"/>
+              <line x1="200" y1="200" x2="200" y2="360" stroke="rgba(255,255,255,0.1)"/>
+              <line x1="200" y1="200" x2="60" y2="280" stroke="rgba(255,255,255,0.1)"/>
+              <line x1="200" y1="200" x2="60" y2="120" stroke="rgba(255,255,255,0.1)"/>
+
+              <!-- Candidate Skill Polygon (Animated) -->
+              <polygon id="radar-poly" points="200,60 320,135 295,265 200,330 85,260 90,135" fill="rgba(99, 102, 241, 0.35)" stroke="#818cf8" stroke-width="3"/>
+            </svg>
+            <div style="display: flex; gap: 20px; font-size: 13px; color: #94a3b8; margin-top: 10px;">
+              <span>• System Design (95%)</span>
+              <span>• Python/FastAPI (94%)</span>
+              <span>• React/Next.js (92%)</span>
+              <span>• Cloud/AWS (88%)</span>
+            </div>
+          </div>
+
+          <!-- Right: Readiness & Accounts -->
+          <div class="glass-card" style="display: flex; flex-direction: column; justify-content: space-between;">
+            <div>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h3 style="font-size: 20px; font-weight: 700;">Career Readiness Index</h3>
+                <span class="badge badge-emerald">HIGH CONFIDENCE</span>
+              </div>
+              <div style="display: flex; align-items: baseline; gap: 14px; margin-bottom: 12px;">
+                <span style="font-size: 64px; font-weight: 800; color: #818cf8;">88%</span>
+                <span style="font-size: 18px; color: #94a3b8;">Market Readiness Score</span>
+              </div>
+              <p style="font-size: 15px; color: #cbd5e1; line-height: 1.5;">
+                Your verified coding activity, repository commits, and interview simulation performance rank in the top 12% of applicants for Senior Full-Stack roles.
+              </p>
+            </div>
+
+            <div>
+              <div style="font-size: 14px; font-weight: 700; color: #94a3b8; margin-bottom: 12px; text-transform: uppercase;">
+                Connected Career Radar Profiles (3 Accounts)
+              </div>
+              <div class="accounts-strip">
+                <div class="account-pill">
+                  <span style="font-size: 18px;">🐙</span>
+                  <span>GitHub • 42 Repos</span>
+                </div>
+                <div class="account-pill">
+                  <span style="font-size: 18px;">▶️</span>
+                  <span>Google / YouTube</span>
+                </div>
+                <div class="account-pill">
+                  <span style="font-size: 18px;">📸</span>
+                  <span>Instagram</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= SCENE 6: AI MOCK INTERVIEW (55 - 78s) ================= -->
+      <section class="clip" id="scene-6" data-start="55" data-duration="23">
+        <div class="interview-room">
+          <!-- Sidebar: Aira Avatar -->
+          <div class="interviewer-sidebar">
+            <div class="badge badge-purple">LIVE AI SESSION</div>
+            <div class="aira-avatar" id="s6-avatar">
+              <span>🤖</span>
+            </div>
+            <div>
+              <h3 style="font-size: 22px; font-weight: 700;">Aira AI</h3>
+              <p style="font-size: 14px; color: #94a3b8;">Principal Interview Coach</p>
+            </div>
+            <div class="wave-bars" id="s6-wave">
+              <div class="wave-bar" style="height: 24px;"></div>
+              <div class="wave-bar" style="height: 32px;"></div>
+              <div class="wave-bar" style="height: 18px;"></div>
+              <div class="wave-bar" style="height: 28px;"></div>
+              <div class="wave-bar" style="height: 14px;"></div>
+            </div>
+            <div style="font-size: 13px; color: #a5b4fc;">Active Listening • Speech to Text</div>
+          </div>
+
+          <!-- Dialogue Panel -->
+          <div class="chat-dialog-panel">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.06); padding-bottom: 14px;">
+              <span style="font-size: 16px; font-weight: 600; color: #e2e8f0;">Role: Senior Full-Stack Engineer (System Design)</span>
+              <span class="badge badge-indigo">QUESTION 1 OF 3</span>
+            </div>
+
+            <!-- Message 1: Aira Question -->
+            <div class="message-bubble msg-aira" id="s6-bubble-1">
+              <strong style="color: #818cf8; display: block; margin-bottom: 6px;">Aira AI:</strong>
+              "How would you design a resilient distributed caching layer for high-throughput microservices to handle traffic spikes and prevent cache stampedes?"
+            </div>
+
+            <!-- Message 2: Candidate Answer -->
+            <div class="message-bubble msg-user" id="s6-bubble-2" style="opacity: 0;">
+              <strong style="color: #c4b5fd; display: block; margin-bottom: 6px;">You (Spoken Response):</strong>
+              "I would deploy a Redis cluster using the cache-aside pattern. To eliminate stampedes, I'd implement probabilistic early expiration, mutex locking around cache misses, and exponential backoff with jitter."
+            </div>
+
+            <!-- Evaluation Chip -->
+            <div style="display: flex; gap: 12px; align-self: flex-start; opacity: 0;" id="s6-eval-chip">
+              <span class="badge badge-emerald">✓ ACCURACY: 95/100</span>
+              <span class="badge badge-purple">✓ CLEAR ARCHITECTURAL TRADE-OFFS</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= SCENE 7: TECHNICAL CODING ROUND (78 - 103s) ================= -->
+      <section class="clip" id="scene-7" data-start="78" data-duration="25">
+        <div class="code-practice-layout">
+          <!-- Problem Description -->
+          <div class="glass-card" style="display: flex; flex-direction: column; justify-content: space-between;">
+            <div>
+              <div class="badge badge-indigo" style="margin-bottom: 16px;">PROBLEM SPECIFICATION</div>
+              <h2 style="font-size: 26px; font-weight: 700; margin-bottom: 12px;">LRU Cache & Rate Limiter</h2>
+              <p style="font-size: 15px; color: #cbd5e1; line-height: 1.6; margin-bottom: 20px;">
+                Design and implement a data structure for a Least Recently Used (LRU) Cache supporting <code>get</code> and <code>put</code> operations in <strong>O(1)</strong> time complexity.
+              </p>
+              <div style="font-size: 14px; color: #94a3b8;">
+                <strong>Constraints:</strong><br/>
+                • Capacity &le; 10,000<br/>
+                • Up to 2 &times; 10<sup>5</sup> calls to get and put<br/>
+                • Must pass concurrency and memory benchmarks
+              </div>
+            </div>
+
+            <div style="margin-top: 24px;">
+              <div style="font-size: 14px; font-weight: 700; color: #94a3b8; margin-bottom: 10px;">TEST HARNESS STATUS</div>
+              <div class="test-case-row" id="s7-test-1">
+                <span>Test 1: Basic Get/Put Eviction</span>
+                <span class="badge badge-emerald">PASSED (3ms)</span>
+              </div>
+              <div class="test-case-row" id="s7-test-2">
+                <span>Test 2: Capacity Boundary Limit</span>
+                <span class="badge badge-emerald">PASSED (4ms)</span>
+              </div>
+              <div class="test-case-row" id="s7-test-3">
+                <span>Test 3: High Concurrency Load</span>
+                <span class="badge badge-emerald">PASSED (7ms)</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Code Editor -->
+          <div class="code-editor-box" data-layout-allow-overflow="true">
+            <div class="editor-tab-bar">
+              <span style="color: #94a3b8; font-size: 14px;">solution.py</span>
+              <button class="btn-run-code" id="s7-btn-run" style="background: #022c22; color: #34d399; border: 1px solid #34d399;">▶ Run Code &amp; Tests</button>
+            </div>
+            <div class="editor-lines" data-layout-allow-overflow="true">
+<pre style="margin: 0;" data-layout-allow-overflow="true"><span style="color: #c678dd;">class</span> <span style="color: #e5c07b;">Node</span>:
+    <span style="color: #c678dd;">def</span> <span style="color: #61afef;">__init__</span>(self, key, val):
+        self.key, self.val = key, val
+        self.prev = self.next = <span style="color: #d19a66;">None</span>
+
+<span style="color: #c678dd;">class</span> <span style="color: #e5c07b;">LRUCache</span>:
+    <span style="color: #c678dd;">def</span> <span style="color: #61afef;">__init__</span>(self, capacity: <span style="color: #e5c07b;">int</span>):
+        self.cap = capacity
+        self.cache = {}
+        self.left, self.right = Node(<span style="color: #d19a66;">0</span>, <span style="color: #d19a66;">0</span>), Node(<span style="color: #d19a66;">0</span>, <span style="color: #d19a66;">0</span>)
+        self.left.next, self.right.prev = self.right, self.left
+
+    <span style="color: #c678dd;">def</span> <span style="color: #61afef;">get</span>(self, key: <span style="color: #e5c07b;">int</span>) -&gt; <span style="color: #e5c07b;">int</span>:
+        <span style="color: #c678dd;">if</span> key <span style="color: #c678dd;">in</span> self.cache:
+            self.remove(self.cache[key])
+            self.insert(self.cache[key])
+            <span style="color: #c678dd;">return</span> self.cache[key].val
+        <span style="color: #c678dd;">return</span> -<span style="color: #d19a66;">1</span>
+
+    <span style="color: #c678dd;">def</span> <span style="color: #61afef;">put</span>(self, key: <span style="color: #e5c07b;">int</span>, value: <span style="color: #e5c07b;">int</span>) -&gt; <span style="color: #d19a66;">None</span>:
+        <span style="color: #c678dd;">if</span> key <span style="color: #c678dd;">in</span> self.cache:
+            self.remove(self.cache[key])
+        self.cache[key] = Node(key, value)
+        self.insert(self.cache[key])</pre>
+            </div>
+            <div style="background: rgba(16, 185, 129, 0.15); border-top: 1px solid rgba(16, 185, 129, 0.3); padding: 12px 20px; display: flex; align-items: center; justify-content: space-between;" id="s7-success-bar" data-layout-allow-overflow="true">
+              <span style="color: #34d399; font-weight: 700; font-size: 15px;">✓ ALL 3/3 TEST CASES PASSED</span>
+              <span style="color: #94a3b8; font-size: 13px;">Runtime: 14ms • Memory: 18.4 MB (Faster than 96.2%)</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= SCENE 8: INTERVIEW FEEDBACK REPORT (103 - 113s) ================= -->
+      <section class="clip" id="scene-8" data-start="103" data-duration="10">
+        <div class="feedback-layout">
+          <!-- Score Gauge Card -->
+          <div class="score-circle-card">
+            <span class="badge badge-emerald">ASSESSMENT VERIFIED</span>
+            <div class="score-ring">
+              <div style="font-size: 48px; font-weight: 800; line-height: 1; color: #ffffff;">93</div>
+              <div style="font-size: 14px; color: #94a3b8; margin-top: 4px;">OUT OF 100</div>
+            </div>
+            <div>
+              <h3 style="font-size: 22px; font-weight: 700;">Exceptional Rating</h3>
+              <p style="font-size: 14px; color: #94a3b8; margin-top: 4px;">Senior Full-Stack Ready</p>
+            </div>
+          </div>
+
+          <!-- Metrics Breakdown -->
+          <div class="glass-card" style="display: flex; flex-direction: column; justify-content: space-between;">
+            <div>
+              <h3 style="font-size: 22px; font-weight: 700; margin-bottom: 24px;">AI Competency Evaluation</h3>
+              
+              <div style="margin-bottom: 18px;">
+                <div style="display: flex; justify-content: space-between; font-weight: 600; margin-bottom: 8px;">
+                  <span>Technical Correctness &amp; Algorithms</span>
+                  <span style="color: #34d399;">95%</span>
+                </div>
+                <div style="height: 8px; background: #1e293b; border-radius: 4px; overflow: hidden;">
+                  <div style="width: 95%; height: 100%; background: #10b981;"></div>
+                </div>
+              </div>
+
+              <div style="margin-bottom: 18px;">
+                <div style="display: flex; justify-content: space-between; font-weight: 600; margin-bottom: 8px;">
+                  <span>System Architecture &amp; Scalability</span>
+                  <span style="color: #818cf8;">92%</span>
+                </div>
+                <div style="height: 8px; background: #1e293b; border-radius: 4px; overflow: hidden;">
+                  <div style="width: 92%; height: 100%; background: #6366f1;"></div>
+                </div>
+              </div>
+
+              <div style="margin-bottom: 18px;">
+                <div style="display: flex; justify-content: space-between; font-weight: 600; margin-bottom: 8px;">
+                  <span>Communication &amp; Trade-off Explanation</span>
+                  <span style="color: #c084fc;">90%</span>
+                </div>
+                <div style="height: 8px; background: #1e293b; border-radius: 4px; overflow: hidden;">
+                  <div style="width: 90%; height: 100%; background: #8b5cf6;"></div>
+                </div>
+              </div>
+            </div>
+
+            <div style="background: rgba(30, 41, 59, 0.4); padding: 18px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.06);">
+              <div style="font-size: 14px; font-weight: 700; color: #10b981; margin-bottom: 4px;">KEY STRENGTH IDENTIFIED:</div>
+              <div style="font-size: 14px; color: #cbd5e1;">
+                Strong implementation of doubly linked list pointers for constant time O(1) eviction with zero memory leaks.
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= SCENE 9: FINAL OUTRO & BRAND (113 - 120s) ================= -->
+      <section class="clip" id="scene-9" data-start="113" data-duration="7">
+        <div class="badge badge-emerald" id="s9-badge" style="font-size: 15px; padding: 10px 24px;">
+          🎉 2 JOB OFFERS RECEIVED • STRIPE &amp; SUPABASE
+        </div>
+        <div class="final-brand-stamp" id="s9-stamp">
+          <div class="final-logo-icon">⚡</div>
+          <h1 style="font-size: 68px; font-weight: 800; letter-spacing: -0.03em;">CareerAI Job Tracker</h1>
+        </div>
+        <p style="font-size: 24px; color: #94a3b8; max-width: 800px;" id="s9-sub">
+          Accelerate your entire career journey with AI-powered discovery, tracking, and interview mastery.
+        </p>
+        <div class="final-cta-btn" id="s9-cta">
+          Start Your AI Career Journey Today
+        </div>
+      </section>
+    </div>
+
+    <!-- GSAP TIMELINE SCRIPT -->
+    <script>
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+
+      // Scene 1: Intro (0 - 7s)
+      tl.to("#scene-1", { opacity: 1, duration: 0.6, ease: "power2.out" }, 0);
+      tl.from("#s1-badge", { y: -20, opacity: 0, duration: 0.8, ease: "back.out(1.7)" }, 0.2);
+      tl.from("#s1-title", { y: 30, opacity: 0, duration: 1.0, ease: "power3.out" }, 0.4);
+      tl.from("#s1-sub", { y: 20, opacity: 0, duration: 0.8, ease: "power2.out" }, 0.8);
+      tl.from("#s1-chips .chip-card", { y: 20, opacity: 0, stagger: 0.15, duration: 0.7, ease: "back.out(1.5)" }, 1.2);
+      tl.to("#scene-1", { opacity: 0, duration: 0.5, ease: "power2.in" }, 6.5);
+
+      // Scene 2: Dashboard (7 - 17s)
+      tl.to("#scene-2", { opacity: 1, duration: 0.6, ease: "power2.out" }, 7.0);
+      tl.from(".stat-card", { scale: 0.92, opacity: 0, stagger: 0.12, duration: 0.7, ease: "back.out(1.5)" }, 7.2);
+      tl.to("#scene-2", { opacity: 0, duration: 0.5, ease: "power2.in" }, 16.5);
+
+      // Scene 3: Job Discovery (17 - 32s)
+      tl.to("#scene-3", { opacity: 1, duration: 0.6, ease: "power2.out" }, 17.0);
+      tl.from("#s3-search", { y: -20, opacity: 0, duration: 0.6, ease: "power2.out" }, 17.2);
+      tl.from(".job-card", { y: 30, opacity: 0, stagger: 0.15, duration: 0.8, ease: "power3.out" }, 17.6);
+      // Simulate button click & toast pop
+      tl.to("#s3-btn-add", { scale: 0.95, duration: 0.15, yoyo: true, repeat: 1 }, 23.8);
+      tl.to("#s3-toast", { opacity: 1, y: 0, duration: 0.5, ease: "back.out(1.7)" }, 24.2);
+      tl.to("#s3-toast", { opacity: 0, y: 10, duration: 0.4 }, 30.5);
+      tl.to("#scene-3", { opacity: 0, duration: 0.5, ease: "power2.in" }, 31.5);
+
+      // Scene 4: Kanban (32 - 45s)
+      tl.to("#scene-4", { opacity: 1, duration: 0.6, ease: "power2.out" }, 32.0);
+      tl.from(".kanban-col", { y: 25, opacity: 0, stagger: 0.1, duration: 0.7, ease: "power2.out" }, 32.2);
+      // Moving card from Applied to Interviewing
+      tl.to("#s4-moving-card", {
+        x: 430,
+        y: 200,
+        scale: 1.05,
+        boxShadow: "0 15px 30px rgba(99, 102, 241, 0.5)",
+        duration: 1.4,
+        ease: "power2.inOut"
+      }, 35.5);
+      tl.to("#s4-moving-card", { scale: 1.0, duration: 0.3 }, 37.0);
+      tl.to("#scene-4", { opacity: 0, duration: 0.5, ease: "power2.in" }, 44.5);
+
+      // Scene 5: Analytics (45 - 55s)
+      tl.to("#scene-5", { opacity: 1, duration: 0.6, ease: "power2.out" }, 45.0);
+      tl.from("#radar-poly", { scale: 0.2, transformOrigin: "200px 200px", duration: 1.2, ease: "elastic.out(1, 0.5)" }, 45.3);
+      tl.from(".account-pill", { opacity: 0, x: -15, stagger: 0.15, duration: 0.6, ease: "power2.out" }, 46.5);
+      tl.to("#scene-5", { opacity: 0, duration: 0.5, ease: "power2.in" }, 54.5);
+
+      // Scene 6: Mock Interview (55 - 78s)
+      tl.to("#scene-6", { opacity: 1, duration: 0.6, ease: "power2.out" }, 55.0);
+      tl.from("#s6-avatar", { scale: 0.8, opacity: 0, duration: 0.8, ease: "back.out(1.7)" }, 55.2);
+      tl.from("#s6-bubble-1", { opacity: 0, y: 15, duration: 0.7, ease: "power2.out" }, 55.6);
+      // Candidate answer appears
+      tl.to("#s6-bubble-2", { opacity: 1, y: 0, duration: 0.8, ease: "power2.out" }, 64.0);
+      tl.to("#s6-eval-chip", { opacity: 1, duration: 0.6, ease: "power2.out" }, 67.0);
+      tl.to("#scene-6", { opacity: 0, duration: 0.5, ease: "power2.in" }, 77.5);
+
+      // Scene 7: Code Practice (78 - 103s)
+      tl.to("#scene-7", { opacity: 1, duration: 0.6, ease: "power2.out" }, 78.0);
+      tl.from(".code-practice-layout", { opacity: 0, y: 20, duration: 0.7, ease: "power2.out" }, 78.3);
+      // Click Run Code
+      tl.to("#s7-btn-run", { scale: 0.94, duration: 0.15, yoyo: true, repeat: 1 }, 83.0);
+      tl.from("#s7-test-1", { opacity: 0.4, duration: 0.4 }, 83.5);
+      tl.from("#s7-test-2", { opacity: 0.4, duration: 0.4 }, 84.5);
+      tl.from("#s7-test-3", { opacity: 0.4, duration: 0.4 }, 85.5);
+      tl.from("#s7-success-bar", { y: 20, opacity: 0, duration: 0.6, ease: "back.out(1.5)" }, 86.5);
+      tl.to("#scene-7", { opacity: 0, duration: 0.5, ease: "power2.in" }, 102.5);
+
+      // Scene 8: Feedback Report (103 - 113s)
+      tl.to("#scene-8", { opacity: 1, duration: 0.6, ease: "power2.out" }, 103.0);
+      tl.from(".score-ring", { scale: 0.7, opacity: 0, duration: 0.9, ease: "back.out(1.7)" }, 103.3);
+      tl.to("#scene-8", { opacity: 0, duration: 0.5, ease: "power2.in" }, 112.5);
+
+      // Scene 9: Outro (113 - 120s)
+      tl.to("#scene-9", { opacity: 1, duration: 0.7, ease: "power2.out" }, 113.0);
+      tl.from("#s9-badge", { y: -20, opacity: 0, duration: 0.7, ease: "back.out(1.5)" }, 113.3);
+      tl.from("#s9-stamp", { scale: 0.9, opacity: 0, duration: 0.8, ease: "power3.out" }, 113.8);
+      tl.from("#s9-cta", { scale: 0.9, opacity: 0, duration: 0.7, ease: "back.out(1.5)" }, 114.5);
+
+      window.__timelines["main"] = tl;
+      tl.seek(0);
+    </script>
+  </body>
+</html>

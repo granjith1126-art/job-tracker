@@ -1,7 +1,10 @@
 import os
 import hashlib
 import hmac
-import jwt
+try:
+    from jose import jwt
+except ImportError:
+    import jwt
 from datetime import datetime, timedelta
 from typing import Optional
 from fastapi import Depends, HTTPException, status

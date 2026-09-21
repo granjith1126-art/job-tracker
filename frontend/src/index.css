@@ -1,5 +1,24 @@
 @import "tailwindcss";
 
+:root {
+  --bg-base: #050814;
+  --bg-surface: #0A0F24;
+  --bg-glass: rgba(13, 19, 42, 0.65);
+  --bg-glass-card: rgba(16, 24, 52, 0.55);
+  --bg-glass-input: rgba(10, 15, 35, 0.7);
+  --border-glass: rgba(255, 255, 255, 0.08);
+  --border-glass-hover: rgba(99, 102, 241, 0.3);
+  --border-glass-top: rgba(255, 255, 255, 0.15);
+  --text-primary: #F8FAFC;
+  --text-secondary: #94A3B8;
+  --text-muted: #64748B;
+  --accent-blue: #38BDF8;
+  --accent-indigo: #6366F1;
+  --accent-purple: #A855F7;
+  --glow-primary: rgba(56, 189, 248, 0.15);
+  --glow-indigo: rgba(99, 102, 241, 0.2);
+}
+
 @layer base {
   * {
     box-sizing: border-box;
@@ -11,55 +30,191 @@
     width: 100%;
     height: 100%;
     overflow-x: hidden;
-    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    background-color: var(--bg-base);
+    color: var(--text-primary);
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     -webkit-font-smoothing: antialiased;
   }
 }
 
-/* App Canvas & Cards */
+/* Ambient Radial Background Lighting matching Reference */
+.ambient-bg {
+  background-color: #050814;
+  background-image: 
+    radial-gradient(circle at 50% 0%, rgba(56, 189, 248, 0.12) 0%, transparent 45%),
+    radial-gradient(circle at 85% 20%, rgba(99, 102, 241, 0.09) 0%, transparent 40%),
+    radial-gradient(circle at 15% 60%, rgba(168, 85, 247, 0.06) 0%, transparent 35%),
+    radial-gradient(circle at 50% 100%, rgba(30, 58, 138, 0.1) 0%, transparent 50%);
+  background-attachment: fixed;
+}
+
+/* Glassmorphic Panel Styles */
+.glass-panel {
+  background: rgba(13, 19, 42, 0.65);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-top-color: rgba(255, 255, 255, 0.14);
+  border-radius: 1.25rem;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4), inset 0 1px 0 0 rgba(255, 255, 255, 0.08);
+}
+
+.glass-panel-hover {
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.glass-panel-hover:hover {
+  border-color: rgba(99, 102, 241, 0.35);
+  border-top-color: rgba(147, 197, 253, 0.4);
+  box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.5), 0 0 25px 0 rgba(99, 102, 241, 0.15);
+  transform: translateY(-2px);
+}
+
+.glass-card-compact {
+  background: rgba(16, 24, 52, 0.5);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-top-color: rgba(255, 255, 255, 0.12);
+  border-radius: 1.25rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+  transition: all 0.2s ease;
+}
+.glass-card-compact:hover {
+  border-color: rgba(56, 189, 248, 0.28);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.45), 0 0 15px rgba(56, 189, 248, 0.1);
+  transform: translateY(-2px);
+}
+
+/* Reference Navigation Pill Active State */
+.nav-pill-active {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: #FFFFFF;
+  box-shadow: 0 0 18px rgba(99, 102, 241, 0.35);
+}
+
+/* Reference Sparkle Badges (e.g. ✦ Based on your activity) */
+.badge-sparkle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  padding: 0.25rem 0.625rem;
+  border-radius: 9999px;
+  background: rgba(99, 102, 241, 0.12);
+  border: 1px solid rgba(99, 102, 241, 0.25);
+  color: #C7D2FE;
+}
+
+.badge-sparkle-blue {
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  color: #BAE6FD;
+}
+
+.badge-sparkle-emerald {
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  color: #A7F3D0;
+}
+
+.badge-sparkle-amber {
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  color: #FDE68A;
+}
+
+/* Glow Buttons */
+.btn-glow {
+  background: linear-gradient(135deg, #4F46E5 0%, #6366F1 50%, #38BDF8 100%);
+  color: #FFFFFF;
+  font-weight: 700;
+  font-size: 0.75rem;
+  padding: 0.5rem 1.25rem;
+  border-radius: 0.75rem;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 4px 15px rgba(79, 70, 229, 0.35);
+}
+.btn-glow:hover {
+  box-shadow: 0 6px 22px rgba(79, 70, 229, 0.55), 0 0 15px rgba(56, 189, 248, 0.3);
+  transform: translateY(-1px);
+}
+
+.btn-glass {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #E2E8F0;
+  font-weight: 600;
+  font-size: 0.75rem;
+  padding: 0.5rem 1rem;
+  border-radius: 0.75rem;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+.btn-glass:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #FFFFFF;
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Backward compatibility classes with dark glass makeover */
 .app-card {
-  background-color: #FFFFFF;
-  border: 1px solid #E2E8F0;
-  border-radius: 1rem;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 1px 2px -1px rgba(0, 0, 0, 0.04);
+  background: rgba(13, 19, 42, 0.65);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-top-color: rgba(255, 255, 255, 0.14);
+  border-radius: 1.25rem;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
 }
 
 .app-card-hover {
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 .app-card-hover:hover {
-  border-color: #CBD5E1;
-  box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.06), 0 2px 6px -2px rgba(0, 0, 0, 0.04);
+  border-color: rgba(99, 102, 241, 0.35);
+  box-shadow: 0 12px 35px 0 rgba(0, 0, 0, 0.5);
+  transform: translateY(-1px);
 }
 
-/* Primary Purple Buttons matching screenshot */
 .btn-primary-purple {
-  background-color: #4F46E5;
+  background: linear-gradient(135deg, #4F46E5 0%, #6366F1 100%);
   color: #FFFFFF;
   font-weight: 600;
   font-size: 0.75rem;
   padding: 0.5rem 1.125rem;
-  border-radius: 0.5rem;
+  border-radius: 0.625rem;
   transition: all 0.15s ease;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
   cursor: pointer;
-  border: none;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 4px 14px rgba(79, 70, 229, 0.35);
 }
 .btn-primary-purple:hover {
-  background-color: #4338CA;
-  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
+  background: linear-gradient(135deg, #4338CA 0%, #4F46E5 100%);
+  box-shadow: 0 6px 20px rgba(79, 70, 229, 0.5);
 }
 
-/* Sidebar Item Styling */
+/* Sidebar legacy classes */
 .sidebar-item {
   display: flex;
   align-items: center;
   gap: 0.75rem;
   padding: 0.625rem 0.875rem;
-  border-radius: 0.625rem;
+  border-radius: 0.75rem;
   font-size: 0.8125rem;
   font-weight: 500;
   color: #94A3B8;
@@ -71,17 +226,17 @@
   background-color: rgba(255, 255, 255, 0.06);
 }
 .sidebar-item.active {
-  background-color: #4F46E5;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.18);
   color: #FFFFFF;
   font-weight: 600;
-  box-shadow: 0 4px 14px rgba(79, 70, 229, 0.4);
+  box-shadow: 0 0 18px rgba(99, 102, 241, 0.35);
 }
 
-/* Extracted Skill Pills - Light Cyan / Blue from screenshot */
 .skill-pill-cyan {
-  background-color: #EFF6FF;
-  color: #2563EB;
-  border: 1px solid #DBEAFE;
+  background-color: rgba(56, 189, 248, 0.1);
+  color: #38BDF8;
+  border: 1px solid rgba(56, 189, 248, 0.25);
   font-weight: 500;
   font-size: 0.75rem;
   padding: 0.3125rem 0.75rem;
@@ -90,11 +245,10 @@
   align-items: center;
 }
 
-/* Match Badge */
 .match-badge {
-  background-color: #ECFDF5;
-  color: #059669;
-  border: 1px solid #A7F3D0;
+  background-color: rgba(16, 185, 129, 0.12);
+  color: #34D399;
+  border: 1px solid rgba(16, 185, 129, 0.3);
   font-size: 0.75rem;
   font-weight: 700;
   padding: 0.25rem 0.625rem;
@@ -106,49 +260,50 @@
 
 /* Status Badges */
 .status-applied {
-  background-color: #EFF6FF;
-  color: #2563EB;
-  border: 1px solid #BFDBFE;
+  background-color: rgba(59, 130, 246, 0.12);
+  color: #60A5FA;
+  border: 1px solid rgba(59, 130, 246, 0.3);
 }
 .status-interview {
-  background-color: #FFFBEB;
-  color: #D97706;
-  border: 1px solid #FDE68A;
+  background-color: rgba(245, 158, 11, 0.12);
+  color: #FBBF24;
+  border: 1px solid rgba(245, 158, 11, 0.3);
 }
 .status-offer {
-  background-color: #ECFDF5;
-  color: #059669;
-  border: 1px solid #A7F3D0;
+  background-color: rgba(16, 185, 129, 0.12);
+  color: #34D399;
+  border: 1px solid rgba(16, 185, 129, 0.3);
 }
 .status-rejected {
-  background-color: #FEF2F2;
-  color: #DC2626;
-  border: 1px solid #FECACA;
+  background-color: rgba(239, 68, 68, 0.12);
+  color: #F87171;
+  border: 1px solid rgba(239, 68, 68, 0.3);
 }
 
-/* Custom Scrollbars */
+/* Sleek Dark Scrollbars */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #CBD5E1;
+  background: rgba(255, 255, 255, 0.12);
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #94A3B8;
-}
-
-/* Radial Dark Gradient for Landing Page */
-.bg-radial-hero {
-  background: radial-gradient(circle at 50% 20%, #171630 0%, #090B12 60%, #05070B 100%);
+  background: rgba(255, 255, 255, 0.24);
 }
 
 .text-gradient {
-  background: linear-gradient(135deg, #A855F7 0%, #6366F1 50%, #38BDF8 100%);
+  background: linear-gradient(135deg, #E0E7FF 0%, #C7D2FE 40%, #38BDF8 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.text-gradient-purple {
+  background: linear-gradient(135deg, #F3E8FF 0%, #D8B4FE 50%, #818CF8 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }

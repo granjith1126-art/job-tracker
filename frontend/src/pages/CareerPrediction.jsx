@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Sparkles, ArrowRight, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Sparkles, ArrowRight, CheckCircle2, Target, ChevronRight } from 'lucide-react';
 import RadialProgress from '../components/RadialProgress';
 import { api } from '../services/api';
+import PageHeader from '../components/common/PageHeader';
+import GlassCard from '../components/common/GlassCard';
 
 export default function CareerPrediction({ userProfile, onSelectRole, setCurrentTab }) {
   const [predictions, setPredictions] = useState([]);
@@ -26,83 +28,122 @@ export default function CareerPrediction({ userProfile, onSelectRole, setCurrent
     fetchPredictions();
   }, [userProfile]);
 
-  const topMatch = predictions[0] || { match: 50, title: "Software Engineer" };
+  const topMatch = predictions[0] || { match: 65, title: "Software Engineer", subtitle: "Build scalable web applications and cloud backend services." };
 
   return (
-    <div className="p-6 md:p-8 space-y-6 w-full max-w-none">
-      {/* View Header */}
-      <div>
-        <h1 className="text-xl font-bold text-slate-900 tracking-tight">Career Predictions</h1>
-        <p className="text-xs text-slate-500 mt-1">Real-time career compatibility calculated from your technical skills, experience, and interests.</p>
-      </div>
+    <div className="p-6 sm:p-10 space-y-8 w-full max-w-7xl mx-auto animate-in fade-in duration-300">
+      
+      <PageHeader
+        title="Career Predictions"
+        subtitle="Multi-vector predictive intelligence calculated from your verified technical skills, experience, and Career Radar interests."
+        badge="AI Career Trajectory"
+      />
 
       {/* Main 2-Column Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch w-full">
         
-        {/* Left Card: Radial Progress Donut Card */}
-        <div className="lg:col-span-5 app-card p-8 bg-white flex flex-col items-center justify-center text-center">
-          <RadialProgress percentage={topMatch.match} size={230} strokeWidth={18} title="Top Match" />
-          <h3 className="text-sm font-bold text-slate-800 mt-4">{topMatch.title}</h3>
-          <p className="text-xs text-slate-500 max-w-xs mt-1">{topMatch.subtitle || 'Optimal career fit based on your verified skills.'}</p>
+        {/* Left: Top Match Hero Card */}
+        <div className="lg:col-span-5 glass-panel p-8 flex flex-col items-center justify-center text-center relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
+          
+          <div className="relative z-10 flex flex-col items-center">
+            <RadialProgress 
+              percentage={topMatch.match} 
+              size={210} 
+              strokeWidth={16} 
+              primaryColor="#38BDF8" 
+              secondaryColor="rgba(255,255,255,0.06)" 
+              title="Top Fit" 
+            />
+            
+            <h3 className="text-xl font-extrabold text-white mt-6 font-display">{topMatch.title}</h3>
+            <p className="text-xs text-slate-300/85 max-w-xs mt-2 leading-relaxed">
+              {topMatch.subtitle || 'Optimal career fit based on your verified skills and project track record.'}
+            </p>
+
+            <button
+              onClick={() => {
+                if (onSelectRole) onSelectRole(topMatch.id);
+                if (setCurrentTab) setCurrentTab('skill-gap');
+              }}
+              className="btn-glow text-xs mt-6 cursor-pointer"
+            >
+              <span>Analyze Skill Gap</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
         </div>
 
-        {/* Right Card: Ranked Career List with Full-Width Progress Bars */}
-        <div className="lg:col-span-7 app-card p-7 bg-white flex flex-col justify-center space-y-5">
-          {loading ? (
-            <p className="text-xs text-slate-500 text-center py-12">Computing dynamic career recommendations...</p>
-          ) : (
-            predictions.map((career, index) => {
-              const isSelected = selectedRole?.id === career.id;
+        {/* Right: Ranked Career Paths with Progress Bars */}
+        <div className="lg:col-span-7 glass-panel p-7 flex flex-col justify-between space-y-4">
+          <div className="flex items-center justify-between pb-3 border-b border-white/5">
+            <div className="flex items-center gap-2">
+              <Target className="w-4 h-4 text-cyan-400" />
+              <h4 className="text-sm font-bold text-white">Ranked Compatibility Paths</h4>
+            </div>
+            <span className="text-xs text-slate-400 font-mono">{predictions.length} Paths Calculated</span>
+          </div>
 
-              return (
-                <div 
-                  key={career.id || index} 
-                  className={`space-y-2 p-3 rounded-xl transition-all cursor-pointer ${
-                    isSelected ? 'bg-indigo-50/70 border border-indigo-200/80 shadow-xs' : 'hover:bg-slate-50'
-                  }`}
-                  onClick={() => {
-                    setSelectedRole(career);
-                  }}
-                >
-                  {/* Text Row: Rank number, Title, and Percentage */}
-                  <div className="flex items-center justify-between text-xs font-bold text-slate-800">
-                    <div className="flex items-center gap-3">
-                      <span className="text-slate-400 font-bold">{index + 1}.</span>
-                      <span>{career.title}</span>
+          <div className="space-y-3 flex-1 overflow-y-auto max-h-[380px] custom-scrollbar pr-1">
+            {loading ? (
+              <p className="text-xs text-slate-400 text-center py-12">Computing dynamic career recommendations...</p>
+            ) : (
+              predictions.map((career, index) => {
+                const isSelected = selectedRole?.id === career.id;
+
+                return (
+                  <div 
+                    key={career.id || index} 
+                    className={`space-y-2 p-3.5 rounded-2xl transition-all cursor-pointer border ${
+                      isSelected 
+                        ? 'bg-gradient-to-r from-cyan-500/15 to-indigo-600/15 border-cyan-400/40 shadow-[0_0_15px_rgba(56,189,248,0.2)]' 
+                        : 'bg-white/5 hover:bg-white/10 border-white/5'
+                    }`}
+                    onClick={() => {
+                      setSelectedRole(career);
+                    }}
+                  >
+                    <div className="flex items-center justify-between text-xs font-bold">
+                      <div className="flex items-center gap-2.5">
+                        <span className="w-5 h-5 rounded-lg bg-white/5 flex items-center justify-center text-[10px] text-slate-400 font-mono">
+                          {index + 1}
+                        </span>
+                        <span className="text-white text-sm font-semibold">{career.title}</span>
+                      </div>
+                      <span className="font-extrabold text-cyan-400 font-mono text-sm">{career.match}%</span>
                     </div>
-                    <span className="font-extrabold text-indigo-600">{career.match}%</span>
-                  </div>
 
-                  {/* Horizontal Progress Bar */}
-                  <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full transition-all duration-700"
-                      style={{ width: `${career.match}%` }}
-                    />
-                  </div>
-
-                  {isSelected && (
-                    <div className="pt-2 flex items-center justify-between text-[11px] text-slate-600 animate-in fade-in">
-                      <span>{career.matched_count || 0} skills matched</span>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (onSelectRole) onSelectRole(career.id);
-                          if (setCurrentTab) setCurrentTab('skill-gap');
-                        }}
-                        className="text-indigo-600 font-bold hover:underline flex items-center gap-1"
-                      >
-                        Analyze Skill Gap <ArrowRight className="w-3 h-3" />
-                      </button>
+                    <div className="w-full h-1.5 bg-black/40 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-gradient-to-r from-cyan-400 via-indigo-500 to-purple-500 rounded-full transition-all duration-700"
+                        style={{ width: `${career.match}%` }}
+                      />
                     </div>
-                  )}
-                </div>
-              );
-            })
-          )}
+                  </div>
+                );
+              })
+            )}
+          </div>
+
+          <div className="pt-3 border-t border-white/5 flex items-center justify-between text-xs text-slate-400">
+            <span>Click any career to inspect details.</span>
+            {selectedRole && (
+              <button
+                onClick={() => {
+                  if (onSelectRole) onSelectRole(selectedRole.id);
+                  if (setCurrentTab) setCurrentTab('skill-gap');
+                }}
+                className="text-cyan-400 hover:text-cyan-300 font-bold flex items-center gap-1 cursor-pointer"
+              >
+                <span>View {selectedRole.title} Gap</span>
+                <ChevronRight className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
         </div>
 
       </div>
+
     </div>
   );
 }

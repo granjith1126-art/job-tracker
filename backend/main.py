@@ -1,4 +1,7 @@
-﻿from fastapi import FastAPI
+from dotenv import load_dotenv
+load_dotenv()
+
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from database import init_db
 from services.seed_data import seed_database
@@ -23,6 +26,11 @@ app.add_middleware(
 def on_startup():
     init_db()
     seed_database()
+    import os
+    from services.oauth_config import is_provider_configured
+    print(f"GitHub OAuth: {'configured' if is_provider_configured('github') else 'not configured'}")
+    print(f"Google OAuth: {'configured' if is_provider_configured('google') else 'not configured'}")
+    print(f"YouTube API: {'configured' if bool(os.environ.get('YOUTUBE_API_KEY')) else 'not configured'}")
 
 @app.get("/")
 def root():

@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Target, Zap, CheckCircle2, AlertTriangle, XCircle, Sparkles } from 'lucide-react';
+import { Target, Zap, CheckCircle2, AlertTriangle, XCircle, Sparkles, ChevronRight } from 'lucide-react';
 import { api } from '../services/api';
+import PageHeader from '../components/common/PageHeader';
+import GlassCard from '../components/common/GlassCard';
 
 export default function SkillGap({ userProfile, selectedRole = 'ml-engineer' }) {
   const [role, setRole] = useState(selectedRole);
@@ -49,7 +51,7 @@ export default function SkillGap({ userProfile, selectedRole = 'ml-engineer' }) 
   const getGapBadge = (item) => {
     if (item.gap === '✓ Matched' || item.gap === 'No Gap' || item.gap === 'None' || item.severity === 'success') {
       return (
-        <span className="inline-flex items-center gap-1 h-6 px-2.5 rounded-full text-xs font-semibold bg-emerald-50 border border-emerald-200 text-emerald-700">
+        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-500/15 border border-emerald-500/30 text-emerald-300">
           <CheckCircle2 className="w-3.5 h-3.5" />
           <span>✓ Matched</span>
         </span>
@@ -57,14 +59,14 @@ export default function SkillGap({ userProfile, selectedRole = 'ml-engineer' }) 
     }
     if (item.gap === 'Medium' || item.gap === 'Medium Gap' || item.severity === 'warning') {
       return (
-        <span className="inline-flex items-center gap-1 h-6 px-2.5 rounded-full text-xs font-semibold bg-amber-50 border border-amber-200 text-amber-700">
+        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-500/15 border border-amber-500/30 text-amber-300">
           <AlertTriangle className="w-3.5 h-3.5" />
           <span>Medium Gap</span>
         </span>
       );
     }
     return (
-      <span className="inline-flex items-center gap-1 h-6 px-2.5 rounded-full text-xs font-semibold bg-rose-50 border border-rose-200 text-rose-700">
+      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-500/15 border border-rose-500/30 text-rose-300">
         <XCircle className="w-3.5 h-3.5" />
         <span>High Gap</span>
       </span>
@@ -72,30 +74,31 @@ export default function SkillGap({ userProfile, selectedRole = 'ml-engineer' }) 
   };
 
   return (
-    <div className="p-6 md:p-8 space-y-6 w-full max-w-none">
-      {/* View Header with Target Role Selector */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div className="p-6 sm:p-10 space-y-6 w-full max-w-7xl mx-auto animate-in fade-in duration-300">
+      
+      {/* Header with Role Selector */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-white/5">
         <div>
-          <h1 className="text-xl font-bold text-slate-900 tracking-tight">Skill Gap Analysis</h1>
-          <p className="text-xs text-slate-500 mt-1">Detailed comparison between your verified skills and industry requirements for target roles.</p>
+          <h1 className="text-xl sm:text-2xl font-black text-white tracking-tight font-display">Skill Gap Analysis</h1>
+          <p className="text-xs sm:text-sm text-slate-400 mt-1">Detailed comparison between your verified skills and industry requirements.</p>
         </div>
 
         <div className="flex items-center gap-3 shrink-0">
-          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-50 border border-indigo-100 text-xs font-bold text-indigo-900">
+          <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-cyan-950/40 border border-cyan-500/30 text-xs font-bold text-cyan-200">
             <span>Readiness:</span>
-            <span className="text-indigo-600 font-extrabold">{readinessScore}%</span>
+            <span className="text-cyan-400 font-extrabold font-mono text-sm">{readinessScore}%</span>
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold text-slate-500">Target Role:</span>
+            <span className="text-xs font-semibold text-slate-400">Target Role:</span>
             <select
               value={role}
               onChange={(e) => setRole(e.target.value)}
-              className="h-9 px-3 rounded-lg bg-white border border-slate-200 text-xs font-semibold text-indigo-600 focus:outline-none focus:border-indigo-500 cursor-pointer shadow-2xs"
+              className="h-10 px-3.5 rounded-xl bg-[#0F172E] border border-white/10 text-xs font-semibold text-white focus:outline-none focus:border-cyan-400 cursor-pointer shadow-sm"
             >
               {rolesCatalog.length > 0 ? (
                 rolesCatalog.map((r) => (
-                  <option key={r.id} value={r.id}>{r.title}</option>
+                  <option key={r.id} value={r.id} className="bg-[#090D1E] text-white">{r.title}</option>
                 ))
               ) : (
                 <option value="ml-engineer">Machine Learning Engineer</option>
@@ -105,44 +108,59 @@ export default function SkillGap({ userProfile, selectedRole = 'ml-engineer' }) 
         </div>
       </div>
 
-      {/* Main Full-Width Table Card */}
-      <div className="app-card bg-white overflow-hidden w-full">
-        <div className="overflow-x-auto w-full">
+      {/* Main Glass Matrix Table */}
+      <div className="glass-panel overflow-hidden">
+        <div className="p-5 border-b border-white/5 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Zap className="w-4 h-4 text-cyan-400" />
+            <h3 className="text-sm font-bold text-white tracking-tight">Core Competency Matrix</h3>
+          </div>
+          <span className="text-xs text-slate-400 font-mono">{gapData.length} Skills Evaluated</span>
+        </div>
+
+        <div className="overflow-x-auto custom-scrollbar">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="border-b border-slate-200 bg-slate-50/75 text-xs font-bold text-slate-500 h-12">
-                <th className="py-3 px-6 font-bold text-slate-600">Core Skill</th>
-                <th className="py-3 px-6 font-bold text-slate-600">Your Current Level</th>
-                <th className="py-3 px-6 font-bold text-slate-600">Required Benchmark</th>
-                <th className="py-3 px-6 font-bold text-slate-600 text-left">Gap Status</th>
+              <tr className="border-b border-white/10 bg-white/[0.02] text-[11px] font-bold text-slate-400 uppercase tracking-wider h-11">
+                <th className="py-3 px-6">Skill / Technology</th>
+                <th className="py-3 px-6">Your Level</th>
+                <th className="py-3 px-6">Industry Requirement</th>
+                <th className="py-3 px-6">Gap Status</th>
+                <th className="py-3 px-6">Recommended Action</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 text-xs font-medium text-slate-700">
+            <tbody className="divide-y divide-white/5 text-xs text-slate-200">
               {loading ? (
                 <tr>
-                  <td colSpan="4" className="py-12 text-center text-slate-500">
-                    Evaluating skill gap matrix...
+                  <td colSpan={5} className="py-12 text-center text-slate-400">
+                    Evaluating role requirements against profile...
                   </td>
                 </tr>
               ) : gapData.length === 0 ? (
                 <tr>
-                  <td colSpan="4" className="py-12 text-center text-slate-500">
-                    No skill gap requirements found for this role.
+                  <td colSpan={5} className="py-12 text-center text-slate-400">
+                    No matrix data available. Select a role above.
                   </td>
                 </tr>
               ) : (
-                gapData.map((row, index) => (
-                  <tr key={index} className="h-14 hover:bg-slate-50/80 transition-colors">
-                    <td className="py-4 px-6 font-bold text-slate-900">
-                      {row.skill}
+                gapData.map((item, index) => (
+                  <tr key={index} className="hover:bg-white/[0.03] transition-colors">
+                    <td className="py-3.5 px-6 font-bold text-white flex items-center gap-2">
+                      <div className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
+                      <span>{item.skill}</span>
                     </td>
-                    <td className="py-4 px-6">
-                      <span className={row.your_level === 'None' ? 'text-slate-400 italic' : 'text-slate-800 font-semibold'}>
-                        {row.your_level}
-                      </span>
+                    <td className="py-3.5 px-6 font-medium text-slate-300">
+                      {item.your_level || 'None'}
                     </td>
-                    <td className="py-4 px-6 text-slate-600">{row.required_level}</td>
-                    <td className="py-4 px-6">{getGapBadge(row)}</td>
+                    <td className="py-3.5 px-6 font-medium text-slate-300">
+                      {item.required_level || 'Intermediate'}
+                    </td>
+                    <td className="py-3.5 px-6">
+                      {getGapBadge(item)}
+                    </td>
+                    <td className="py-3.5 px-6 text-slate-300/80">
+                      {item.action || `Learn ${item.skill} fundamentals & practice coding`}
+                    </td>
                   </tr>
                 ))
               )}
@@ -151,22 +169,25 @@ export default function SkillGap({ userProfile, selectedRole = 'ml-engineer' }) 
         </div>
       </div>
 
-      {/* Recommendations Banner */}
+      {/* Learning Recommendations Cards */}
       {recommendations.length > 0 && (
-        <div className="app-card p-5 bg-gradient-to-r from-indigo-50/60 via-purple-50/40 to-white border border-indigo-100/80 space-y-2">
-          <div className="flex items-center gap-2 text-xs font-bold text-indigo-900">
-            <Sparkles className="w-4 h-4 text-indigo-600" />
-            <span>AI Learning Roadmap Recommendations</span>
-          </div>
-          <div className="flex flex-wrap gap-2 pt-1">
-            {recommendations.map((rec, idx) => (
-              <span key={idx} className="px-3 py-1 bg-white rounded-lg border border-indigo-200/60 text-xs font-semibold text-indigo-700 shadow-2xs">
-                Learn: <strong>{rec}</strong>
-              </span>
+        <div className="space-y-3">
+          <h4 className="text-sm font-bold text-white tracking-tight flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-cyan-400" />
+            <span>Targeted Learning Path</span>
+          </h4>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {recommendations.map((rec, i) => (
+              <div key={i} className="glass-card-compact p-5 space-y-2">
+                <span className="text-[10px] font-bold text-cyan-400 uppercase tracking-wider block">Priority {i + 1}</span>
+                <h5 className="text-sm font-bold text-white">{rec.title || rec.skill || `Skill ${i + 1}`}</h5>
+                <p className="text-xs text-slate-300/80 leading-relaxed">{rec.description || rec.action || "Recommended module to close role gap."}</p>
+              </div>
             ))}
           </div>
         </div>
       )}
+
     </div>
   );
 }

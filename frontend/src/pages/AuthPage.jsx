@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Sparkles, ArrowRight, Lock, User, Mail, ShieldCheck, AlertCircle, Loader2 } from 'lucide-react';
 import { api, setStoredToken } from '../services/api';
 
-export default function AuthPage({ onAuthSuccess }) {
+export default function AuthPage({ onAuthSuccess, onBackToLanding }) {
   const [isLogin, setIsLogin] = useState(true);
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
@@ -87,6 +87,17 @@ export default function AuthPage({ onAuthSuccess }) {
           <p className="text-[11px] text-slate-400 font-medium tracking-wide">Intelligent Career Guidance & Tracking</p>
         </div>
       </div>
+
+      {/* Back button */}
+      {onBackToLanding && (
+        <button
+          type="button"
+          onClick={onBackToLanding}
+          className="mb-4 text-xs font-semibold text-slate-400 hover:text-cyan-300 transition-colors z-10 flex items-center gap-1.5 cursor-pointer"
+        >
+          <span>← Back to Overview</span>
+        </button>
+      )}
 
       {/* Auth Card */}
       <div className="w-full max-w-md bg-slate-900/80 border border-slate-800/80 rounded-2xl shadow-2xl backdrop-blur-2xl p-7 md:p-8 z-10">

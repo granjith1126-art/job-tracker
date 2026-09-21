@@ -1,44 +1,45 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Sparkles, Bell, ChevronDown, Check, CheckCheck, Trash2, Zap, Target, FileText, Briefcase, Award, Code, User, AlertCircle } from 'lucide-react';
+import { Sparkles, Bell, Search, Check, CheckCheck, Trash2, Zap, Target, FileText, Briefcase, Award, Code, User, AlertCircle, Compass } from 'lucide-react';
 import { api } from '../services/api';
 
 export function LandingNavbar({ onGetStarted }) {
   return (
     <header className="w-full max-w-7xl mx-auto px-8 py-6 flex items-center justify-between">
-      {/* Brand Logo */}
       <div className="flex items-center gap-3">
-        <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-purple-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-purple-900/40 shrink-0">
+        <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-purple-600 to-indigo-500 flex items-center justify-center shadow-[0_0_20px_rgba(99,102,241,0.4)] shrink-0">
           <Sparkles className="w-5 h-5 text-white" />
         </div>
-        <span className="text-2xl font-extrabold text-white tracking-tight font-display">Career<span className="text-purple-400">AI</span></span>
+        <span className="text-2xl font-extrabold text-white tracking-tight font-display">Career<span className="text-cyan-400">AI</span></span>
       </div>
 
-      {/* Nav Links */}
       <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-300">
-        <a href="#home" className="text-white hover:text-purple-400 transition-colors">Home</a>
-        <a href="#features" className="hover:text-purple-400 transition-colors">Features</a>
-        <a href="#about" className="hover:text-purple-400 transition-colors">About</a>
-        <a href="#how-it-works" className="hover:text-purple-400 transition-colors">How It Works</a>
-        <a href="#contact" className="hover:text-purple-400 transition-colors">Contact</a>
+        <a href="#home" className="text-white hover:text-cyan-400 transition-colors">Home</a>
+        <a href="#features" className="hover:text-cyan-400 transition-colors">Features</a>
+        <a href="#about" className="hover:text-cyan-400 transition-colors">About</a>
+        <a href="#how-it-works" className="hover:text-cyan-400 transition-colors">How It Works</a>
       </nav>
 
-      {/* CTA Button */}
-      <div>
+      <div className="flex items-center gap-3">
         <button
           onClick={onGetStarted}
-          className="h-10 px-6 rounded-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-bold shadow-lg shadow-purple-700/30 hover:shadow-purple-700/50 hover:scale-[1.02] transition-all cursor-pointer inline-flex items-center justify-center"
+          className="btn-glass text-xs cursor-pointer px-4 py-2"
         >
-          Get Started
+          <span>Sign In</span>
+        </button>
+        <button
+          onClick={onGetStarted}
+          className="btn-glow text-xs cursor-pointer px-4 py-2"
+        >
+          <span>Get Started</span>
         </button>
       </div>
     </header>
   );
 }
 
-export function TopHeader({ title, subtitle, userProfile, onProfileClick }) {
-  const userName = userProfile?.name || "Job Seeker";
-  const displayTitle = title || `Welcome back, ${userName.split(' ')[0]}! 👋`;
-  const displaySubtitle = subtitle || "Here's your real-time career overview";
+export function TopHeader({ title, subtitle, userProfile, onProfileClick, onSearchClick = null }) {
+  const userName = userProfile?.name || "Candidate";
+  const firstName = userName.split(' ')[0] || "there";
 
   const [isOpen, setIsOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
@@ -63,11 +64,10 @@ export function TopHeader({ title, subtitle, userProfile, onProfileClick }) {
 
   useEffect(() => {
     fetchNotifications();
-    const interval = setInterval(fetchNotifications, 15000); // refresh periodically
+    const interval = setInterval(fetchNotifications, 20000);
     return () => clearInterval(interval);
   }, []);
 
-  // Close dropdown on outside click
   useEffect(() => {
     function handleClickOutside(event) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -111,82 +111,81 @@ export function TopHeader({ title, subtitle, userProfile, onProfileClick }) {
 
   const handleClearAll = async () => {
     try {
-      await api.notifications.clear();
+      await api.notifications.clearAll();
       setNotifications([]);
       setUnreadCount(0);
+      setIsOpen(false);
     } catch (err) {
       console.error(err);
     }
   };
 
-  const getNotificationIcon = (iconType) => {
-    switch (iconType) {
-      case 'zap': return <Zap className="w-4 h-4 text-amber-500" />;
-      case 'target': return <Target className="w-4 h-4 text-purple-500" />;
-      case 'file': return <FileText className="w-4 h-4 text-blue-500" />;
-      case 'briefcase': return <Briefcase className="w-4 h-4 text-emerald-500" />;
-      case 'check': return <Check className="w-4 h-4 text-teal-500" />;
-      case 'code': return <Code className="w-4 h-4 text-indigo-500" />;
-      case 'user': return <User className="w-4 h-4 text-purple-600" />;
-      default: return <Bell className="w-4 h-4 text-indigo-500" />;
-    }
-  };
-  
   return (
-    <header className="w-full h-16 px-8 bg-white border-b border-slate-200 flex items-center justify-between sticky top-0 z-20 shrink-0 shadow-2xs">
-      <div className="flex flex-col justify-center">
-        <h1 className="text-base font-bold text-slate-900 tracking-tight leading-tight">{displayTitle}</h1>
-        <p className="text-[11px] text-slate-500 font-normal leading-tight mt-0.5">{displaySubtitle}</p>
+    <header className="px-6 sm:px-10 py-5 flex items-center justify-between border-b border-white/5 select-none bg-transparent relative z-30">
+      {/* Left: Personalized Warm AI Greeting matching Reference Screenshot */}
+      <div className="space-y-1 min-w-0 pr-4">
+        <h2 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-white tracking-tight font-display truncate">
+          {title ? title : `Hey ${firstName}, I'm CareerAI`}
+        </h2>
+        <p className="text-xs sm:text-sm text-slate-400 font-medium leading-relaxed truncate max-w-2xl">
+          {subtitle ? subtitle : "Your personal AI who learns your career style, skills, and goals — so you don't have to repeat yourself."}
+        </p>
       </div>
 
-      <div className="flex items-center gap-4">
-        {/* Notification Bell & Dropdown */}
+      {/* Right: Search, Notifications & Avatar */}
+      <div className="flex items-center gap-3 shrink-0">
+        
+        {/* Quick Search Button */}
+        <button
+          type="button"
+          onClick={onSearchClick}
+          className="w-10 h-10 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 hover:text-white flex items-center justify-center transition-all cursor-pointer"
+          title="Search"
+        >
+          <Search className="w-4 h-4" />
+        </button>
+
+        {/* Notification Bell Dropdown */}
         <div className="relative" ref={dropdownRef}>
-          <button 
+          <button
+            type="button"
             onClick={handleToggle}
-            className={`relative w-9 h-9 rounded-full flex items-center justify-center transition-all cursor-pointer ${
-              isOpen ? 'bg-indigo-50 text-indigo-600' : 'hover:bg-slate-100 text-slate-500 hover:text-slate-800'
-            }`}
-            aria-label="Notifications"
+            className="w-10 h-10 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 hover:text-white flex items-center justify-center transition-all relative cursor-pointer"
+            title="Notifications"
           >
             <Bell className="w-4 h-4" />
             {unreadCount > 0 && (
-              <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 bg-red-500 text-white font-bold text-[10px] rounded-full flex items-center justify-center ring-2 ring-white animate-pulse">
-                {unreadCount > 9 ? '9+' : unreadCount}
-              </span>
+              <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(56,189,248,0.8)] animate-pulse" />
             )}
           </button>
 
-          {/* Notifications Dropdown Panel */}
+          {/* Notifications Panel */}
           {isOpen && (
-            <div className="absolute right-0 mt-2 w-84 sm:w-96 bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden z-50 animate-in fade-in zoom-in-95 duration-150">
-              {/* Header */}
-              <div className="px-4 py-3.5 bg-gradient-to-r from-slate-900 to-indigo-950 text-white flex items-center justify-between">
+            <div className="absolute right-0 mt-3 w-80 sm:w-96 rounded-3xl bg-[#090D1F]/95 backdrop-blur-2xl border border-white/15 shadow-[0_20px_50px_rgba(0,0,0,0.6)] z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+              <div className="p-4 bg-white/5 border-b border-white/10 flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Bell className="w-4 h-4 text-purple-400" />
-                  <span className="text-xs font-bold tracking-tight">Notifications</span>
+                  <span className="text-xs font-bold text-white tracking-tight">Notifications</span>
                   {unreadCount > 0 && (
-                    <span className="px-1.5 py-0.5 text-[10px] font-bold bg-indigo-500/40 text-indigo-200 rounded-full border border-indigo-400/30">
+                    <span className="px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 text-[10px] font-bold border border-cyan-500/30 font-mono">
                       {unreadCount} new
                     </span>
                   )}
                 </div>
+
                 <div className="flex items-center gap-2">
                   {unreadCount > 0 && (
-                    <button 
+                    <button
                       onClick={handleMarkAllRead}
-                      className="text-[11px] text-slate-300 hover:text-white transition-colors cursor-pointer flex items-center gap-1 font-medium"
-                      title="Mark all as read"
+                      className="text-[11px] text-slate-400 hover:text-white transition-colors cursor-pointer"
                     >
-                      <CheckCheck className="w-3.5 h-3.5" />
-                      <span>Read all</span>
+                      Mark all read
                     </button>
                   )}
                   {notifications.length > 0 && (
-                    <button 
+                    <button
                       onClick={handleClearAll}
-                      className="text-[11px] text-slate-400 hover:text-red-300 transition-colors cursor-pointer flex items-center gap-1 font-medium ml-1"
-                      title="Clear all notifications"
+                      className="text-slate-400 hover:text-rose-400 transition-colors cursor-pointer"
+                      title="Clear all"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
@@ -194,48 +193,31 @@ export function TopHeader({ title, subtitle, userProfile, onProfileClick }) {
                 </div>
               </div>
 
-              {/* Notification List */}
-              <div className="max-h-[380px] overflow-y-auto divide-y divide-slate-100">
-                {notifications.length === 0 ? (
-                  <div className="py-10 px-4 text-center">
-                    <div className="w-12 h-12 rounded-full bg-slate-50 text-slate-300 flex items-center justify-center mx-auto mb-2">
-                      <Bell className="w-6 h-6" />
-                    </div>
-                    <p className="text-xs font-semibold text-slate-700">No notifications yet</p>
-                    <p className="text-[11px] text-slate-400 mt-1 max-w-[200px] mx-auto">
-                      Actions like profile updates, resume analysis, and applications will appear here.
-                    </p>
+              <div className="max-h-80 overflow-y-auto divide-y divide-white/5 custom-scrollbar">
+                {loading && notifications.length === 0 ? (
+                  <div className="p-8 text-center text-xs text-slate-400">Loading alerts...</div>
+                ) : notifications.length === 0 ? (
+                  <div className="p-8 text-center text-xs text-slate-400">
+                    <Sparkles className="w-6 h-6 text-slate-500 mx-auto mb-2 opacity-50" />
+                    <span>No new notifications. Everything is up to date!</span>
                   </div>
                 ) : (
-                  notifications.map((notif) => (
-                    <div
-                      key={notif.id}
-                      onClick={() => !notif.is_read && handleMarkRead(notif.id)}
-                      className={`p-3.5 hover:bg-slate-50 transition-colors cursor-pointer flex items-start gap-3 ${
-                        notif.is_read ? 'opacity-70 bg-white' : 'bg-indigo-50/30'
-                      }`}
+                  notifications.map((n) => (
+                    <div 
+                      key={n.id}
+                      onClick={() => handleMarkRead(n.id)}
+                      className={`p-3.5 hover:bg-white/5 transition-colors cursor-pointer flex items-start gap-3 ${!n.is_read ? 'bg-cyan-500/5' : ''}`}
                     >
-                      <div className="w-8 h-8 rounded-xl bg-white border border-slate-100 shadow-2xs flex items-center justify-center shrink-0 mt-0.5">
-                        {getNotificationIcon(notif.icon_type)}
+                      <div className="w-7 h-7 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center shrink-0 mt-0.5 text-cyan-400">
+                        <Sparkles className="w-3.5 h-3.5" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between gap-1">
-                          <p className={`text-xs font-semibold truncate ${notif.is_read ? 'text-slate-800' : 'text-indigo-950 font-bold'}`}>
-                            {notif.title}
-                          </p>
-                          <span className="text-[10px] text-slate-400 shrink-0 font-normal">
-                            {notif.time_ago || "Just now"}
-                          </span>
+                        <div className="flex items-center justify-between gap-2">
+                          <h5 className="text-xs font-bold text-white truncate">{n.title}</h5>
+                          <span className="text-[10px] text-slate-500 font-mono">{n.time_ago || "Just now"}</span>
                         </div>
-                        {notif.message && (
-                          <p className="text-[11px] text-slate-500 mt-0.5 line-clamp-2 leading-relaxed">
-                            {notif.message}
-                          </p>
-                        )}
+                        <p className="text-[11px] text-slate-300/80 mt-0.5 leading-relaxed line-clamp-2">{n.message}</p>
                       </div>
-                      {!notif.is_read && (
-                        <span className="w-2 h-2 rounded-full bg-indigo-600 shrink-0 mt-1.5 ring-2 ring-indigo-100" />
-                      )}
                     </div>
                   ))
                 )}
@@ -244,25 +226,27 @@ export function TopHeader({ title, subtitle, userProfile, onProfileClick }) {
           )}
         </div>
 
-        {/* User Profile dropdown */}
+        {/* Profile Avatar matching Reference Image (circular with glowing border) */}
         <div 
           onClick={onProfileClick}
-          className="flex items-center gap-2.5 pl-1 pr-2.5 py-1 rounded-full hover:bg-slate-100 cursor-pointer transition-colors"
+          className="w-10 h-10 rounded-2xl p-[1px] bg-gradient-to-tr from-cyan-400 via-indigo-500 to-purple-500 shadow-[0_0_15px_rgba(56,189,248,0.25)] cursor-pointer hover:scale-105 transition-transform shrink-0"
+          title="My Profile"
         >
-          {userProfile?.avatar_url ? (
-            <img 
-              src={userProfile.avatar_url} 
-              alt={userName} 
-              className="w-8 h-8 rounded-full object-cover ring-1 ring-slate-200 shadow-sm shrink-0" 
-            />
-          ) : (
-            <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-600 to-purple-600 text-white font-bold text-xs flex items-center justify-center ring-1 ring-slate-200 shadow-sm shrink-0 uppercase">
-              {userName ? userName.charAt(0) : 'U'}
-            </div>
-          )}
-          <span className="text-xs font-semibold text-slate-800">{userName}</span>
-          <ChevronDown className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+          <div className="w-full h-full rounded-2xl bg-[#090D1C] overflow-hidden flex items-center justify-center">
+            {userProfile?.avatar_url ? (
+              <img 
+                src={userProfile.avatar_url} 
+                alt={userName} 
+                className="w-full h-full object-cover" 
+              />
+            ) : (
+              <span className="text-xs font-extrabold text-white uppercase font-display">
+                {userName.charAt(0) || "U"}
+              </span>
+            )}
+          </div>
         </div>
+
       </div>
     </header>
   );

@@ -3,6 +3,7 @@ import Sidebar from './components/Sidebar';
 import { TopHeader } from './components/Navbar';
 import LandingPage from './pages/LandingPage';
 import Dashboard from './pages/Dashboard';
+import CareerRadar from './pages/CareerRadar';
 import ResumeAnalyzer from './pages/ResumeAnalyzer';
 import CareerPrediction from './pages/CareerPrediction';
 import SkillGap from './pages/SkillGap';
@@ -11,18 +12,31 @@ import ApplicationTracker from './pages/ApplicationTracker';
 import CodingPractice from './pages/CodingPractice';
 import MockTests from './pages/MockTests';
 import CodingProgress from './pages/CodingProgress';
+import AiraMockInterview from './pages/AiraMockInterview';
 import Profile from './pages/Profile';
 import Settings from './pages/Settings';
 import AuthPage from './pages/AuthPage';
 import { api, getStoredToken, removeStoredToken } from './services/api';
 
 export default function App() {
-  const [currentTab, setCurrentTab] = useState('dashboard');
+  const [currentTab, setCurrentTab] = useState(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const tabParam = params.get('tab');
+      if (tabParam) return tabParam;
+      const path = window.location.pathname.replace(/^\/+/, '').split('/')[0];
+      if (path === 'career-radar') return 'career-radar';
+      return 'dashboard';
+    } catch {
+      return 'dashboard';
+    }
+  });
   const [currentUser, setCurrentUser] = useState(null);
   const [userProfile, setUserProfile] = useState(null);
   const [dashboardStats, setDashboardStats] = useState(null);
   const [selectedRoleForGap, setSelectedRoleForGap] = useState('ml-engineer');
   const [authLoading, setAuthLoading] = useState(true);
+  const [showAuthModal, setShowAuthModal] = useState(false);
 
   // Verify stored session on initial mount
   const checkAuth = async () => {
@@ -75,6 +89,7 @@ export default function App() {
   };
 
   useEffect(() => {
+    window.__setCurrentTab = setCurrentTab;
     checkAuth();
 
     const handleAuthExpired = () => {
@@ -97,6 +112,7 @@ export default function App() {
     setCurrentUser(null);
     setUserProfile(null);
     setDashboardStats(null);
+    setShowAuthModal(false);
   };
 
   const handleDataRefresh = () => {
@@ -104,85 +120,108 @@ export default function App() {
     fetchDashboardStats();
   };
 
-  // If loading auth verification
   if (authLoading) {
     return (
-      <div className="min-h-screen w-screen bg-[#090D16] flex items-center justify-center text-slate-400 text-xs">
+      <div className="min-h-screen w-screen ambient-bg flex items-center justify-center text-slate-400 text-xs select-none">
         <div className="flex flex-col items-center gap-3">
-          <div className="w-8 h-8 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
-          <span className="font-semibold text-slate-300">Initializing CareerAI session...</span>
+          <div className="w-9 h-9 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin shadow-[0_0_20px_rgba(56,189,248,0.4)]" />
+          <span className="font-semibold text-slate-300">Initializing CareerAI Operating System...</span>
         </div>
       </div>
     );
   }
 
-  // If unauthenticated, show Auth Page (Login / Sign Up)
   if (!currentUser) {
-    return <AuthPage onAuthSuccess={handleAuthSuccess} />;
+    if (!showAuthModal) {
+      return (
+        <LandingPage
+          onGetStarted={() => setShowAuthModal(true)}
+          setCurrentTab={(tab) => {
+            setShowAuthModal(true);
+            setCurrentTab(tab);
+          }}
+        />
+      );
+    }
+    return (
+      <AuthPage
+        onAuthSuccess={handleAuthSuccess}
+        onBackToLanding={() => setShowAuthModal(false)}
+      />
+    );
   }
 
-  // Header Title and Subtitle synchronization
   const getHeaderInfo = () => {
-    const firstName = currentUser?.username || 'Seeker';
+    const firstName = userProfile?.name?.split(' ')[0] || currentUser?.username || 'Candidate';
     switch (currentTab) {
       case 'dashboard':
         return { 
-          title: `Welcome back, ${firstName}! 👋`, 
-          subtitle: "Here's your live career intelligence overview" 
+          title: `Hey ${firstName}, I'm CareerAI`, 
+          subtitle: "Your personal AI who learns your career style, skills, and goals — so you don't have to repeat yourself." 
+        };
+      case 'career-radar':
+        return {
+          title: "Career Radar",
+          subtitle: "Multi-source intelligence synthesized across your resume, GitHub, and learning channels."
         };
       case 'profile':
         return { 
-          title: "My Profile", 
+          title: "Candidate Profile", 
           subtitle: "Manage your academic credentials, verified skills, target role, and career interests." 
         };
       case 'resume-analyzer':
         return { 
-          title: "Resume Analyzer", 
-          subtitle: "Upload your resume and let AI extract your skills and experience." 
+          title: "Resume Intelligence & ATS Analyzer", 
+          subtitle: "Upload your resume PDF to extract skills, project history, and calculate ATS compatibility." 
         };
       case 'career-prediction':
         return { 
           title: "Career Predictions", 
-          subtitle: "AI predicts the best career paths for you based on your live profile." 
+          subtitle: "AI predicts your best career directions based on your live technical skills." 
         };
       case 'skill-gap':
         return { 
           title: "Skill Gap Analysis", 
-          subtitle: "Detailed comparison between your skills and industry requirements for target roles." 
+          subtitle: "Benchmark your skills against real industry requirements for target roles." 
         };
       case 'recommended-jobs':
         return { 
-          title: "Recommended Jobs", 
-          subtitle: "Personalized matching against 375+ active technology positions." 
+          title: "Verified Live Job Matches", 
+          subtitle: "Personalized matching against live technology positions across India and Remote." 
         };
       case 'application-tracker':
         return { 
-          title: "Application Tracker", 
-          subtitle: "Track and manage your actual job applications in real time." 
+          title: "Application Pipeline Tracker", 
+          subtitle: "Manage and track your active job applications in real time." 
+        };
+      case 'aira-interview':
+        return { 
+          title: "Aira — AI Mock Interviewer", 
+          subtitle: "Interactive voice-driven technical interview coach with live code evaluation." 
         };
       case 'coding-practice':
         return { 
-          title: "Coding Practice", 
+          title: "Coding Practice Workspace", 
           subtitle: "Master data structures, algorithms, and system problems with live code execution." 
         };
       case 'mock-tests':
         return { 
           title: "Technical Mock Assessments", 
-          subtitle: "Timed assessments to evaluate your readiness across domains." 
+          subtitle: "Timed domain assessments to test your technical aptitude." 
         };
       case 'coding-progress':
         return { 
-          title: "Coding & Assessment Progress", 
-          subtitle: "Track your algorithm mastery, mock test scores, and personalized recommendations." 
+          title: "Assessment & Coding Progress", 
+          subtitle: "Track your algorithm mastery, test scores, and personalized recommendations." 
         };
       case 'settings':
         return { 
-          title: "Settings & Configuration", 
-          subtitle: "Manage account details and platform preferences." 
+          title: "Settings & System Telemetry", 
+          subtitle: "Manage connected data sources, recommendation preferences, and accounts." 
         };
       default:
         return { 
-          title: "CareerAI", 
+          title: `Hey ${firstName}, I'm CareerAI`, 
           subtitle: "AI-Powered Career Guidance & Job Matching Platform" 
         };
     }
@@ -191,8 +230,8 @@ export default function App() {
   const headerInfo = getHeaderInfo();
 
   return (
-    <div className="flex h-screen w-screen bg-[#F8FAFC] text-slate-900 overflow-hidden select-none">
-      {/* Fixed Left Dark Sidebar */}
+    <div className="flex h-screen w-screen ambient-bg text-slate-100 overflow-hidden select-none">
+      {/* Minimal Vertical Navigation Rail */}
       <Sidebar
         currentTab={currentTab}
         setCurrentTab={setCurrentTab}
@@ -201,17 +240,18 @@ export default function App() {
       />
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col h-full min-w-0 overflow-hidden bg-[#F8FAFC]">
-        {/* Top Header */}
+      <div className="flex-1 flex flex-col h-full min-w-0 overflow-hidden bg-transparent relative">
+        {/* Top Ambient Header */}
         <TopHeader
           title={headerInfo.title}
           subtitle={headerInfo.subtitle}
           userProfile={userProfile}
           onProfileClick={() => setCurrentTab('profile')}
+          onSearchClick={() => setCurrentTab('recommended-jobs')}
         />
 
         {/* Scrollable View Content */}
-        <main className="flex-1 overflow-y-auto overflow-x-hidden bg-[#F8FAFC]">
+        <main className="flex-1 overflow-y-auto overflow-x-hidden bg-transparent custom-scrollbar pb-12">
           {currentTab === 'dashboard' && (
             <Dashboard
               stats={dashboardStats}
@@ -220,6 +260,13 @@ export default function App() {
                 setSelectedRoleForGap(roleId);
                 setCurrentTab('skill-gap');
               }}
+            />
+          )}
+
+          {currentTab === 'career-radar' && (
+            <CareerRadar
+              userProfile={userProfile}
+              onNavigateTab={(tab) => setCurrentTab(tab)}
             />
           )}
 
@@ -277,6 +324,15 @@ export default function App() {
             />
           )}
 
+          {currentTab === 'aira-interview' && (
+            <AiraMockInterview
+              userProfile={userProfile}
+              onInterviewCompleted={() => {
+                handleDataRefresh();
+              }}
+            />
+          )}
+
           {currentTab === 'coding-practice' && (
             <CodingPractice
               onActionRecorded={() => {
@@ -300,7 +356,7 @@ export default function App() {
           )}
 
           {currentTab === 'settings' && (
-            <Settings />
+            <Settings onNavigateTab={(tab) => setCurrentTab(tab)} />
           )}
         </main>
       </div>

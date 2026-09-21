@@ -1,12 +1,11 @@
 import React from 'react';
-import SkillChip from './common/SkillChip';
 
 export function CompanyLogo({ logoType, company }) {
   const type = (logoType || company || "").toLowerCase();
 
   if (type.includes("google")) {
     return (
-      <div className="w-12 h-12 rounded-xl bg-white border border-slate-200 flex items-center justify-center p-2.5 shrink-0 shadow-2xs">
+      <div className="w-12 h-12 rounded-xl bg-white/10 border border-white/15 flex items-center justify-center p-2.5 shrink-0 shadow-lg backdrop-blur-sm">
         <svg viewBox="0 0 24 24" className="w-full h-full">
           <path fill="#EA4335" d="M12 5c1.6 0 3 .6 4.1 1.7l3.1-3.1C17.3 1.8 14.8 1 12 1 7.5 1 3.7 3.6 1.9 7.3l3.7 2.9C6.5 7.3 9 5 12 5z"/>
           <path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.5c-.3 1.5-1.1 2.8-2.4 3.7l3.7 2.9c2.2-2 3.7-5 3.7-8.8z"/>
@@ -19,7 +18,7 @@ export function CompanyLogo({ logoType, company }) {
 
   if (type.includes("microsoft")) {
     return (
-      <div className="w-12 h-12 rounded-xl bg-white border border-slate-200 flex items-center justify-center p-2.5 shrink-0 shadow-2xs">
+      <div className="w-12 h-12 rounded-xl bg-white/10 border border-white/15 flex items-center justify-center p-2.5 shrink-0 shadow-lg backdrop-blur-sm">
         <div className="grid grid-cols-2 gap-1 w-full h-full">
           <div className="bg-[#F25022]" />
           <div className="bg-[#7FBA00]" />
@@ -32,7 +31,7 @@ export function CompanyLogo({ logoType, company }) {
 
   if (type.includes("amazon")) {
     return (
-      <div className="w-12 h-12 rounded-xl bg-[#232F3E] flex items-center justify-center p-1 text-[#FF9900] font-black text-lg tracking-tighter shrink-0">
+      <div className="w-12 h-12 rounded-xl bg-[#141C2E] border border-amber-500/20 flex items-center justify-center p-1 text-[#FF9900] font-black text-lg tracking-tighter shrink-0 shadow-lg">
         a<span className="text-xs font-normal text-white">z</span>
       </div>
     );
@@ -40,55 +39,118 @@ export function CompanyLogo({ logoType, company }) {
 
   const initials = company ? company.substring(0, 2).toUpperCase() : "AI";
   return (
-    <div className="w-12 h-12 rounded-xl bg-indigo-50 border border-indigo-200 flex items-center justify-center text-indigo-700 font-bold text-xs shrink-0 shadow-2xs">
+    <div className="w-12 h-12 rounded-xl bg-gradient-to-tr from-cyan-500/20 to-blue-600/20 border border-cyan-400/30 flex items-center justify-center text-cyan-300 font-bold text-xs shrink-0 shadow-lg">
       {initials}
     </div>
   );
 }
 
 export default function JobCard({ job, onViewDetails }) {
+  const isLive = job.is_live;
+  const sourceLabel = job.source || "Job Dataset";
+
   return (
-    <div className="app-card app-card-hover p-4 bg-white flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+    <div className="bg-[#0D132A]/70 hover:bg-[#121A38]/80 border border-white/8 hover:border-cyan-400/30 rounded-2xl p-4 md:p-5 transition-all duration-300 backdrop-blur-xl shadow-lg hover:shadow-cyan-950/20 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 group">
       
-      {/* Left: Logo + Job Info starting at identical x-position */}
-      <div className="flex items-center gap-4 flex-1 min-w-0">
+      {/* Left: Logo + Job Info */}
+      <div className="flex items-start sm:items-center gap-4 flex-1 min-w-0">
         <CompanyLogo logoType={job.logo_type} company={job.company} />
 
-        <div className="space-y-1 flex-1 min-w-0">
-          <h3 className="text-sm font-bold text-slate-900 tracking-tight truncate leading-tight">
-            {job.title}
-          </h3>
-
-          <div className="flex items-center gap-2 text-xs text-slate-500 font-medium">
-            <span className="font-semibold text-slate-700">{job.company}</span>
-            <span>•</span>
-            <span className="truncate">{job.location}</span>
+        <div className="space-y-1.5 flex-1 min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <h3 className="text-sm font-bold text-white tracking-tight truncate leading-tight group-hover:text-cyan-300 transition-colors">
+              {job.title}
+            </h3>
+            {isLive ? (
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 shrink-0 shadow-sm">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                <span>{sourceLabel}</span>
+              </span>
+            ) : (
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-white/5 text-slate-300 border border-white/10 shrink-0">
+                {sourceLabel}
+              </span>
+            )}
+            {job.remote && (
+              <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-cyan-500/15 text-cyan-300 border border-cyan-500/30 shrink-0">
+                Remote
+              </span>
+            )}
           </div>
 
-          {/* Skill Pills aligned */}
+          <div className="flex items-center flex-wrap gap-2 text-xs text-slate-400 font-medium">
+            <span className="font-semibold text-slate-200">{job.company}</span>
+            <span className="text-slate-600">•</span>
+            <span className="truncate text-slate-300">{job.location}</span>
+            {job.salary && job.salary !== "Competitive" && (
+              <>
+                <span className="text-slate-600">•</span>
+                <span className="text-emerald-400 font-semibold">{job.salary}</span>
+              </>
+            )}
+            {job.posted_at && (
+              <>
+                <span className="text-slate-600">•</span>
+                <span className="text-slate-500 text-[11px]">Posted {job.posted_at}</span>
+              </>
+            )}
+          </div>
+
+          {/* Matched & Missing Skills */}
           <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
-            <span className="text-[11px] text-slate-400 font-medium mr-1 shrink-0">Top Skills:</span>
-            {job.required_skills?.slice(0, 4).map((skill, i) => (
-              <span 
-                key={i}
-                className="text-[11px] font-medium px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 border border-slate-200/80"
-              >
-                {skill}
-              </span>
-            ))}
+            {job.matched_skills && job.matched_skills.length > 0 ? (
+              <>
+                <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider mr-0.5">Matched:</span>
+                {job.matched_skills.slice(0, 3).map((skill, i) => (
+                  <span 
+                    key={i}
+                    className="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-300 border border-emerald-500/25"
+                  >
+                    ✓ {skill}
+                  </span>
+                ))}
+              </>
+            ) : null}
+
+            {job.missing_skills && job.missing_skills.length > 0 ? (
+              <>
+                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider ml-1 mr-0.5">Missing:</span>
+                {job.missing_skills.slice(0, 2).map((skill, i) => (
+                  <span 
+                    key={i}
+                    className="text-[11px] font-medium px-2 py-0.5 rounded-md bg-rose-500/10 text-rose-300 border border-rose-500/20"
+                  >
+                    {skill}
+                  </span>
+                ))}
+              </>
+            ) : (
+              job.required_skills?.slice(0, 4).map((skill, i) => (
+                <span 
+                  key={i}
+                  className="text-[11px] font-medium px-2 py-0.5 rounded-md bg-white/5 text-slate-300 border border-white/10"
+                >
+                  {skill}
+                </span>
+              ))
+            )}
           </div>
         </div>
       </div>
 
-      {/* Right Side: Match score badge + Fixed width View Job Button */}
-      <div className="flex items-center justify-between md:justify-end w-full md:w-auto gap-4 shrink-0">
-        <span className="w-24 text-center text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200 shrink-0">
-          {job.match_score}% Match
+      {/* Right Side: Match score badge + View Job Button */}
+      <div className="flex items-center justify-between md:justify-end w-full md:w-auto gap-3 shrink-0">
+        <span className={`w-24 text-center text-xs font-bold px-2.5 py-1 rounded-full border shrink-0 ${
+          (job.match_score || 85) >= 75
+            ? 'text-emerald-300 bg-emerald-500/15 border-emerald-400/40 shadow-xs'
+            : 'text-amber-300 bg-amber-500/15 border-amber-400/40'
+        }`}>
+          {job.match_score || 85}% Match
         </span>
 
         <button
           onClick={() => onViewDetails(job)}
-          className="btn-primary-purple w-24 h-9 cursor-pointer text-xs font-bold shrink-0"
+          className="btn-glow px-4 py-2 text-xs font-bold text-white rounded-xl cursor-pointer shrink-0 transition-all active:scale-95"
         >
           View Job
         </button>
