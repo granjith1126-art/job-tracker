@@ -48,6 +48,7 @@ class RemoteOKConnector(BaseJobConnector):
                             skills=tags,
                             source_job_id=str(item.get("id", "")),
                             source_url=item.get("url") or f"https://remoteok.com/l/{item.get('id', '')}",
+                            apply_url=item.get("apply_url") or "",
                             posted_at=item.get("date", "").split("T")[0] if item.get("date") else "Recently",
                             status="active"
                         ))

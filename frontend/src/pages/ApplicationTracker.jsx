@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Trash2, Info, CheckCircle2, ChevronDown } from 'lucide-react';
+import { Plus, Trash2, Info, Clock, ExternalLink } from 'lucide-react';
 import StatusBadge from '../components/common/StatusBadge';
 import AddApplicationModal from '../components/AddApplicationModal';
 import { api } from '../services/api';
@@ -57,12 +57,12 @@ export default function ApplicationTracker({ onApplicationChanged }) {
     }
   };
 
+  // Only valid active stages: Applied, Interview, Offer (Rejected completely removed)
   const counts = {
     all: applications.length,
     applied: applications.filter(a => a.status === 'Applied').length,
     interview: applications.filter(a => a.status === 'Interview').length,
-    offer: applications.filter(a => a.status === 'Offer').length,
-    rejected: applications.filter(a => a.status === 'Rejected').length
+    offer: applications.filter(a => a.status === 'Offer').length
   };
 
   const filteredApps = applications.filter((app) => {
@@ -76,7 +76,9 @@ export default function ApplicationTracker({ onApplicationChanged }) {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-xl font-bold text-white tracking-tight">Application Tracker</h1>
-          <p className="text-xs text-slate-400 mt-1">Track and manage your actual job applications in real time.</p>
+          <p className="text-xs text-slate-400 mt-1">
+            Track confirmed job applications. Records automatically expire and clean up after 30 days.
+          </p>
         </div>
 
         <button
@@ -88,14 +90,13 @@ export default function ApplicationTracker({ onApplicationChanged }) {
         </button>
       </div>
 
-      {/* Filter Tabs */}
+      {/* Filter Tabs - Applied, Interview, Offer */}
       <div className="flex flex-wrap items-center gap-6 border-b border-white/10 pb-3 text-xs font-semibold">
         {[
           { id: 'All', label: `All (${counts.all})` },
           { id: 'Applied', label: `Applied (${counts.applied})` },
           { id: 'Interview', label: `Interview (${counts.interview})` },
-          { id: 'Offer', label: `Offer (${counts.offer})` },
-          { id: 'Rejected', label: `Rejected (${counts.rejected})` }
+          { id: 'Offer', label: `Offer (${counts.offer})` }
         ].map((tab) => {
           const isActive = activeFilter === tab.id;
           return (
@@ -124,19 +125,20 @@ export default function ApplicationTracker({ onApplicationChanged }) {
                 <th className="py-3 px-6 font-bold text-slate-300">Company</th>
                 <th className="py-3 px-6 font-bold text-slate-300">Status</th>
                 <th className="py-3 px-6 font-bold text-slate-300">Date Applied</th>
+                <th className="py-3 px-6 font-bold text-slate-300">Auto-Expiration</th>
                 <th className="py-3 px-6 font-bold text-slate-300 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5 text-xs font-medium text-slate-300">
               {loading ? (
                 <tr>
-                  <td colSpan="5" className="py-12 text-center text-slate-500 font-semibold">
+                  <td colSpan="6" className="py-12 text-center text-slate-500 font-semibold">
                     Loading your applications...
                   </td>
                 </tr>
               ) : filteredApps.length === 0 ? (
                 <tr>
-                  <td colSpan="5" className="py-12 text-center text-slate-500 font-semibold">
+                  <td colSpan="6" className="py-12 text-center text-slate-500 font-semibold">
                     {activeFilter === 'All' 
                       ? 'You have not submitted or tracked any job applications yet.'
                       : `No applications in the "${activeFilter}" stage.`}
@@ -146,7 +148,20 @@ export default function ApplicationTracker({ onApplicationChanged }) {
                 filteredApps.map((app) => (
                   <tr key={app.id} className="h-14 hover:bg-white/[0.03] transition-colors">
                     <td className="py-4 px-6 font-bold text-white">
-                      {app.role}
+                      <div className="flex items-center gap-2">
+                        <span>{app.role}</span>
+                        {app.url && (
+                          <a
+                            href={app.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-cyan-400 hover:text-cyan-300 transition-colors inline-flex items-center gap-1 text-[11px] font-normal"
+                            title="Open external job listing"
+                          >
+                            <ExternalLink className="w-3.5 h-3.5" />
+                          </a>
+                        )}
+                      </div>
                     </td>
                     <td className="py-4 px-6 text-slate-300 font-semibold">
                       {app.company}
@@ -162,12 +177,17 @@ export default function ApplicationTracker({ onApplicationChanged }) {
                           <option value="Applied" className="bg-[#0B1024]">Applied</option>
                           <option value="Interview" className="bg-[#0B1024]">Interview</option>
                           <option value="Offer" className="bg-[#0B1024]">Offer</option>
-                          <option value="Rejected" className="bg-[#0B1024]">Rejected</option>
                         </select>
                       </div>
                     </td>
                     <td className="py-4 px-6 text-slate-400">
                       {app.date_applied}
+                    </td>
+                    <td className="py-4 px-6">
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-cyan-500/10 text-cyan-300 border border-cyan-400/20">
+                        <Clock className="w-3 h-3 text-cyan-400" />
+                        <span>{app.days_remaining !== undefined ? `${app.days_remaining}d remaining` : '30d'}</span>
+                      </span>
                     </td>
                     <td className="py-4 px-6 text-right">
                       <div className="inline-flex items-center justify-end gap-1">
@@ -211,10 +231,32 @@ export default function ApplicationTracker({ onApplicationChanged }) {
             <div className="flex items-start justify-between">
               <div>
                 <h3 className="text-base font-bold text-white tracking-tight">{selectedAppDetails.role}</h3>
-                <p className="text-xs font-semibold text-cyan-400">{selectedAppDetails.company} • Applied on {selectedAppDetails.date_applied}</p>
+                <p className="text-xs font-semibold text-cyan-400">
+                  {selectedAppDetails.company} • Applied on {selectedAppDetails.date_applied}
+                </p>
+                {selectedAppDetails.days_remaining !== undefined && (
+                  <p className="text-[11px] text-slate-400 mt-0.5 flex items-center gap-1">
+                    <Clock className="w-3 h-3 text-cyan-400" />
+                    Auto-expires in {selectedAppDetails.days_remaining} days
+                  </p>
+                )}
               </div>
               <StatusBadge status={selectedAppDetails.status} />
             </div>
+
+            {selectedAppDetails.url && (
+              <div className="pt-1">
+                <a
+                  href={selectedAppDetails.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-xs text-cyan-400 hover:text-cyan-300 font-semibold underline"
+                >
+                  <ExternalLink className="w-3.5 h-3.5" />
+                  View Original Job Posting
+                </a>
+              </div>
+            )}
 
             <div className="space-y-1.5 pt-2">
               <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Recruiter / System Notes</span>

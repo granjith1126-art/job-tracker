@@ -6,6 +6,7 @@
 
 # Python
 __pycache__/
+**/__pycache__/
 *.py[cod]
 *$py.class
 *.so
@@ -13,6 +14,8 @@ __pycache__/
 env/
 venv/
 .venv/
+backend/venv/
+backend/.venv/
 ENV/
 *.db
 *.sqlite
@@ -20,7 +23,10 @@ ENV/
 
 # Node / Frontend
 node_modules/
+**/node_modules/
+frontend/node_modules/
 dist/
+**/dist/
 dist-ssr/
 *.local
 .vite/

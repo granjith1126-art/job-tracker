@@ -201,7 +201,7 @@ export default function Dashboard({ stats, setCurrentTab, onSelectCareer }) {
             title="Verified Live Jobs"
             subtitle="India & Remote Tech Feeds"
             value="Active"
-            description="Verified live postings across RemoteOK, Jobicy, Arbeitnow, Adzuna & Jooble."
+            description="Verified live postings across active tech job feeds in India and remote."
             badgeText="Real-time Match"
             badgeVariant="blue"
             onClick={() => setCurrentTab('recommended-jobs')}

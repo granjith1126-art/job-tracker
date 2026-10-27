@@ -1,4 +1,5 @@
 import React from 'react';
+import { ExternalLink, CheckCircle2 } from 'lucide-react';
 
 export function CompanyLogo({ logoType, company }) {
   const type = (logoType || company || "").toLowerCase();
@@ -45,9 +46,26 @@ export function CompanyLogo({ logoType, company }) {
   );
 }
 
-export default function JobCard({ job, onViewDetails }) {
+export function isValidHttpUrl(string) {
+  if (!string || typeof string !== 'string') return false;
+  try {
+    const parsed = new URL(string.trim());
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+  } catch (_) {
+    return false;
+  }
+}
+
+export default function JobCard({
+  job,
+  onViewDetails,
+  isApplied = false,
+  onMarkApplied,
+  isApplying = false
+}) {
   const isLive = job.is_live;
   const sourceLabel = job.source || "Job Dataset";
+  const hasValidDestination = isValidHttpUrl(job.url);
 
   return (
     <div className="bg-[#0D132A]/70 hover:bg-[#121A38]/80 border border-white/8 hover:border-cyan-400/30 rounded-2xl p-4 md:p-5 transition-all duration-300 backdrop-blur-xl shadow-lg hover:shadow-cyan-950/20 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 group">
@@ -58,7 +76,11 @@ export default function JobCard({ job, onViewDetails }) {
 
         <div className="space-y-1.5 flex-1 min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <h3 className="text-sm font-bold text-white tracking-tight truncate leading-tight group-hover:text-cyan-300 transition-colors">
+            <h3 
+              onClick={() => onViewDetails(job)}
+              className="text-sm font-bold text-white tracking-tight truncate leading-tight group-hover:text-cyan-300 transition-colors cursor-pointer"
+              title="Click to view full role overview"
+            >
               {job.title}
             </h3>
             {isLive ? (
@@ -138,9 +160,9 @@ export default function JobCard({ job, onViewDetails }) {
         </div>
       </div>
 
-      {/* Right Side: Match score badge + View Job Button */}
-      <div className="flex items-center justify-between md:justify-end w-full md:w-auto gap-3 shrink-0">
-        <span className={`w-24 text-center text-xs font-bold px-2.5 py-1 rounded-full border shrink-0 ${
+      {/* Right Side: Match score badge + Apply Now + Mark Applied + View Job */}
+      <div className="flex flex-wrap items-center justify-between md:justify-end w-full md:w-auto gap-2.5 shrink-0 pt-2 md:pt-0 border-t md:border-t-0 border-white/5">
+        <span className={`text-center text-xs font-bold px-2.5 py-1 rounded-full border shrink-0 ${
           (job.match_score || 85) >= 75
             ? 'text-emerald-300 bg-emerald-500/15 border-emerald-400/40 shadow-xs'
             : 'text-amber-300 bg-amber-500/15 border-amber-400/40'
@@ -148,11 +170,63 @@ export default function JobCard({ job, onViewDetails }) {
           {job.match_score || 85}% Match
         </span>
 
+        {/* 1. Functional Apply Now Button (Opens real external destination in new tab) */}
+        {hasValidDestination ? (
+          <a
+            href={job.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(e) => e.stopPropagation()}
+            className="btn-glow px-3 py-1.5 text-xs font-bold text-white rounded-xl inline-flex items-center gap-1.5 shrink-0 transition-all active:scale-95 hover:shadow-cyan-500/25 cursor-pointer"
+            title={`Open official job listing on ${sourceLabel}`}
+          >
+            <span>Apply Now</span>
+            <ExternalLink className="w-3.5 h-3.5" />
+          </a>
+        ) : (
+          <button
+            type="button"
+            disabled
+            onClick={(e) => e.stopPropagation()}
+            className="px-3 py-1.5 text-xs font-semibold text-slate-500 bg-white/5 border border-white/5 rounded-xl inline-flex items-center gap-1.5 shrink-0 cursor-not-allowed opacity-60"
+            title="External destination URL not available for this legacy record"
+          >
+            <span>Apply Now</span>
+            <ExternalLink className="w-3.5 h-3.5" />
+          </button>
+        )}
+
+        {/* 2. Explicit Mark as Applied / Applied Tracker Action */}
+        {isApplied ? (
+          <span 
+            className="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 inline-flex items-center gap-1 shrink-0 shadow-xs"
+            title="Tracked in your Application Tracker"
+          >
+            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+            <span>Applied</span>
+          </span>
+        ) : (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              if (onMarkApplied) onMarkApplied(job);
+            }}
+            disabled={isApplying}
+            className="px-2.5 py-1.5 rounded-xl text-xs font-semibold text-slate-300 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 inline-flex items-center gap-1 shrink-0 transition-all active:scale-95 cursor-pointer disabled:opacity-50"
+            title="Confirm you submitted an application to store in Application Tracker"
+          >
+            <span>{isApplying ? 'Saving...' : 'Mark Applied'}</span>
+          </button>
+        )}
+
+        {/* 3. View Full Job Details */}
         <button
+          type="button"
           onClick={() => onViewDetails(job)}
-          className="btn-glow px-4 py-2 text-xs font-bold text-white rounded-xl cursor-pointer shrink-0 transition-all active:scale-95"
+          className="px-3 py-1.5 text-xs font-medium text-slate-400 hover:text-cyan-300 hover:bg-white/5 rounded-xl cursor-pointer shrink-0 transition-colors"
         >
-          View Job
+          Details
         </button>
       </div>
     </div>

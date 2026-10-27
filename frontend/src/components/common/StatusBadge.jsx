@@ -8,8 +8,6 @@ export default function StatusBadge({ status }) {
     badgeClass = 'bg-amber-500/10 text-amber-300 border-amber-500/25';
   } else if (s.includes('offer') || s.includes('accepted')) {
     badgeClass = 'bg-emerald-500/10 text-emerald-300 border-emerald-500/25';
-  } else if (s.includes('reject')) {
-    badgeClass = 'bg-rose-500/10 text-rose-300 border-rose-500/25';
   }
 
   return (

@@ -1,12 +1,13 @@
 import json
-from datetime import datetime
-from typing import List, Optional, Dict, Any
-from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException, Query, status
+from datetime import datetime, timedelta
+from typing import List, Optional, Dict, Any, Union
+from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException, Query, status, BackgroundTasks
 from sqlalchemy.orm import Session
+from sqlalchemy import or_, and_, func
 from pydantic import BaseModel
 
 from database import (
-    get_db, UserDB, UserProfileDB, JobDB, JobApplicationDB, ActivityDB, NotificationDB,
+    SessionLocal, get_db, UserDB, UserProfileDB, JobDB, JobApplicationDB, ActivityDB, NotificationDB,
     ResumeRecordDB, CodingProblemDB, CodingSubmissionDB, MockTestDB, MockTestAttemptDB,
     InterviewSessionDB, InterviewTurnDB, ConnectedAccountDB, CareerInterestSignalDB
 )
@@ -407,10 +408,15 @@ def get_dashboard_stats(user: UserDB = Depends(get_current_user), db: Session = 
     top_pred = predictions[0] if predictions else None
     secondary = predictions[1:3] if len(predictions) > 1 else []
 
-    # Application counts for this user
-    apps = db.query(JobApplicationDB).filter(JobApplicationDB.user_id == user.id).all()
+    # Application counts for this user (excluding expired records)
+    now = datetime.utcnow()
+    apps = db.query(JobApplicationDB).filter(
+        JobApplicationDB.user_id == user.id,
+        or_(JobApplicationDB.expires_at == None, JobApplicationDB.expires_at > now),
+        JobApplicationDB.status.in_(["Applied", "Interview", "Offer"])
+    ).all()
     total_apps = len(apps)
-    in_progress = sum(1 for a in apps if a.status in ["Applied", "Interview", "Shortlisted"])
+    in_progress = sum(1 for a in apps if a.status in ["Applied", "Interview"])
 
     # Recent activities for this user
     activities = db.query(ActivityDB).filter(
@@ -629,13 +635,41 @@ def get_jobs(
     results.sort(key=lambda x: x["match_score"], reverse=True)
     return results
 
+def cleanup_user_expired_applications(user_id: Optional[int] = None) -> int:
+    """Removes expired job application records from the database automatically."""
+    db = SessionLocal()
+    try:
+        now = datetime.utcnow()
+        query = db.query(JobApplicationDB).filter(
+            JobApplicationDB.expires_at != None,
+            JobApplicationDB.expires_at <= now
+        )
+        if user_id is not None:
+            query = query.filter(JobApplicationDB.user_id == user_id)
+        expired_records = query.all()
+        count = len(expired_records)
+        for rec in expired_records:
+            db.delete(rec)
+        if count > 0:
+            db.commit()
+        return count
+    except Exception as e:
+        logger.error(f"Error cleaning up expired applications: {e}")
+        db.rollback()
+        return 0
+    finally:
+        db.close()
+
+VALID_APPLICATION_STATUSES = {"Applied", "Interview", "Offer"}
+
 class ApplicationCreateSchema(BaseModel):
     role: str
     company: str
-    job_id: Optional[int] = None
+    job_id: Optional[Union[int, str]] = None
     location: Optional[str] = "Remote"
     salary: Optional[str] = "Competitive"
     status: str = "Applied"
+    url: Optional[str] = ""
     date_applied: Optional[str] = None
     notes: Optional[str] = ""
 
@@ -643,44 +677,131 @@ class ApplicationStatusUpdateSchema(BaseModel):
     status: str
 
 @router.get("/applications")
-def get_applications(user: UserDB = Depends(get_current_user), db: Session = Depends(get_db)):
-    apps = db.query(JobApplicationDB).filter(JobApplicationDB.user_id == user.id).order_by(JobApplicationDB.created_at.desc()).all()
+def get_applications(
+    background_tasks: BackgroundTasks,
+    user: UserDB = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    # Non-blocking cleanup of expired applications in background
+    background_tasks.add_task(cleanup_user_expired_applications, user.id)
+
+    # Exclude expired applications and invalid legacy statuses immediately
+    now = datetime.utcnow()
+    apps = db.query(JobApplicationDB).filter(
+        JobApplicationDB.user_id == user.id,
+        or_(JobApplicationDB.expires_at == None, JobApplicationDB.expires_at > now),
+        JobApplicationDB.status.in_(["Applied", "Interview", "Offer"])
+    ).order_by(JobApplicationDB.created_at.desc()).all()
     return [app.to_dict() for app in apps]
 
 @router.post("/applications")
-def create_application(data: ApplicationCreateSchema, user: UserDB = Depends(get_current_user), db: Session = Depends(get_db)):
+def create_application(
+    data: ApplicationCreateSchema,
+    user: UserDB = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    status_clean = data.status.strip().title()
+    if status_clean not in VALID_APPLICATION_STATUSES:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid application status. Allowed values are: {', '.join(sorted(VALID_APPLICATION_STATUSES))}."
+        )
+
+    now = datetime.utcnow()
+    clean_job_id = None
+    if data.job_id is not None:
+        try:
+            clean_job_id = int(data.job_id)
+        except (ValueError, TypeError):
+            clean_job_id = None
+
+    # Check for existing unexpired application for this user and job to prevent duplicates
+    dup_filter = [
+        JobApplicationDB.user_id == user.id,
+        or_(JobApplicationDB.expires_at == None, JobApplicationDB.expires_at > now)
+    ]
+    if clean_job_id is not None:
+        dup_filter.append(
+            or_(
+                JobApplicationDB.job_id == clean_job_id,
+                and_(
+                    func.lower(JobApplicationDB.role) == data.role.strip().lower(),
+                    func.lower(JobApplicationDB.company) == data.company.strip().lower()
+                )
+            )
+        )
+    else:
+        dup_filter.append(
+            and_(
+                func.lower(JobApplicationDB.role) == data.role.strip().lower(),
+                func.lower(JobApplicationDB.company) == data.company.strip().lower()
+            )
+        )
+
+    existing = db.query(JobApplicationDB).filter(*dup_filter).first()
+    if existing:
+        # Idempotent response: return existing active record without creating duplicate
+        if data.url and not existing.url:
+            existing.url = data.url
+            db.commit()
+            db.refresh(existing)
+        return existing.to_dict()
+
+    applied_at = now
+    expires_at = now + timedelta(days=30)
+
     app = JobApplicationDB(
         user_id=user.id,
-        job_id=data.job_id,
-        role=data.role,
-        company=data.company,
+        job_id=clean_job_id,
+        role=data.role.strip(),
+        company=data.company.strip(),
         location=data.location or "Remote",
         salary=data.salary or "Competitive",
-        status=data.status,
-        date_applied=data.date_applied or datetime.utcnow().strftime("%d %b %Y"),
+        status=status_clean,
+        url=data.url or "",
+        applied_at=applied_at,
+        expires_at=expires_at,
+        date_applied=data.date_applied or now.strftime("%d %b %Y"),
         notes=data.notes or ""
     )
     db.add(app)
     db.commit()
     db.refresh(app)
 
-    log_user_activity(db, user.id, f"Applied to {data.company} — {data.role}", icon_type="send")
-    send_user_notification(db, user.id, "Application Submitted", f"Applied for {data.role} at {data.company}.", icon_type="briefcase")
+    log_user_activity(db, user.id, f"Applied to {app.company} — {app.role}", icon_type="send")
+    send_user_notification(db, user.id, "Application Submitted", f"Applied for {app.role} at {app.company}.", icon_type="briefcase")
     return app.to_dict()
 
 @router.put("/applications/{app_id}/status")
-def update_application_status(app_id: int, data: ApplicationStatusUpdateSchema, user: UserDB = Depends(get_current_user), db: Session = Depends(get_db)):
-    app = db.query(JobApplicationDB).filter(JobApplicationDB.id == app_id, JobApplicationDB.user_id == user.id).first()
+def update_application_status(
+    app_id: int,
+    data: ApplicationStatusUpdateSchema,
+    user: UserDB = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    status_clean = data.status.strip().title()
+    if status_clean not in VALID_APPLICATION_STATUSES:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid application status. Allowed values are: {', '.join(sorted(VALID_APPLICATION_STATUSES))}."
+        )
+
+    now = datetime.utcnow()
+    app = db.query(JobApplicationDB).filter(
+        JobApplicationDB.id == app_id,
+        JobApplicationDB.user_id == user.id,
+        or_(JobApplicationDB.expires_at == None, JobApplicationDB.expires_at > now)
+    ).first()
     if not app:
-        raise HTTPException(status_code=404, detail="Application not found")
+        raise HTTPException(status_code=404, detail="Application not found or has expired.")
 
     old_status = app.status
-    app.status = data.status
+    app.status = status_clean
     db.commit()
     db.refresh(app)
 
-    log_user_activity(db, user.id, f"Updated {app.company} application to {data.status}", icon_type="zap")
-    send_user_notification(db, user.id, "Application Status Updated", f"{app.company} status changed from {old_status} to {data.status}.", icon_type="check")
+    log_user_activity(db, user.id, f"Updated {app.company} application to {status_clean}", icon_type="zap")
+    send_user_notification(db, user.id, "Application Status Updated", f"{app.company} status changed from {old_status} to {status_clean}.", icon_type="check")
     return app.to_dict()
 
 @router.delete("/applications/{app_id}")

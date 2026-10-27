@@ -16,15 +16,19 @@ SKILL_NAMES = [s["name"] for s in SKILLS_CATALOG] + [
 ]
 
 def get_connectors_status() -> List[Dict[str, Any]]:
-    """Returns health and authorization status of all job connectors."""
+    """Returns health and status of active/configured job connectors."""
     statuses = []
     for conn in ALL_CONNECTORS:
         configured = conn.is_configured()
+        if not configured:
+            # Per Requirement 4: Unconfigured providers without credentials must be hidden
+            # from the visible UI status bar rather than showing misleading 'Not Configured' badges.
+            continue
         statuses.append({
             "name": conn.name,
-            "connected": configured,
-            "status": "Connected" if configured else "Not Configured",
-            "message": f"{conn.name} feed active." if configured else f"{conn.name} API credentials not configured in environment.",
+            "connected": True,
+            "status": "Connected",
+            "message": f"{conn.name} feed active.",
             "auth_type": conn.source_type
         })
     return statuses
@@ -66,7 +70,7 @@ def sync_live_jobs(query: str = "", location: str = "") -> Dict[str, Any]:
             seen_in_batch.add(sig)
 
             if sig in existing_signatures:
-                # Update timestamp
+                # Update timestamp and URL if missing
                 existing_match = db.query(JobDB).filter(
                     JobDB.is_live == True,
                     JobDB.company == j['company'],
@@ -74,6 +78,8 @@ def sync_live_jobs(query: str = "", location: str = "") -> Dict[str, Any]:
                 ).first()
                 if existing_match:
                     existing_match.posted_at = j.get('posted_at') or existing_match.posted_at
+                    if not existing_match.url and j.get('url'):
+                        existing_match.url = j['url']
                     total_updated += 1
                 continue
 

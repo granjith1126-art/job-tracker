@@ -1,6 +1,6 @@
 import json
-from datetime import datetime
-from sqlalchemy import create_engine, Column, Integer, String, Float, Text, DateTime, ForeignKey, Boolean
+from datetime import datetime, timedelta
+from sqlalchemy import create_engine, Column, Integer, String, Float, Text, DateTime, ForeignKey, Boolean, text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
 
@@ -175,14 +175,23 @@ class JobApplicationDB(Base):
     company = Column(String, nullable=False)
     location = Column(String, default="Remote")
     salary = Column(String, default="Competitive")
-    status = Column(String, default="Applied")  # Applied, Interview, Offer, Rejected
+    status = Column(String, default="Applied")  # Applied, Interview, Offer
     date_applied = Column(String)
+    applied_at = Column(DateTime, default=datetime.utcnow, nullable=True)
+    expires_at = Column(DateTime, nullable=True, index=True)
+    url = Column(Text, default="")
     notes = Column(Text, default="")
     created_at = Column(DateTime, default=datetime.utcnow)
 
     user = relationship("UserDB", back_populates="applications")
 
     def to_dict(self):
+        now = datetime.utcnow()
+        days_remaining = None
+        if self.expires_at:
+            delta = self.expires_at - now
+            days_remaining = max(0, delta.days)
+
         return {
             "id": self.id,
             "user_id": self.user_id,
@@ -193,6 +202,10 @@ class JobApplicationDB(Base):
             "salary": self.salary,
             "status": self.status,
             "date_applied": self.date_applied,
+            "applied_at": self.applied_at.isoformat() if self.applied_at else (self.created_at.isoformat() if self.created_at else None),
+            "expires_at": self.expires_at.isoformat() if self.expires_at else None,
+            "days_remaining": days_remaining,
+            "url": self.url or "",
             "notes": self.notes,
             "created_at": self.created_at.isoformat() if self.created_at else None
         }
@@ -536,7 +549,10 @@ def init_db():
             "ALTER TABLE jobs ADD COLUMN is_live BOOLEAN DEFAULT 0",
             "ALTER TABLE jobs ADD COLUMN posted_at TEXT DEFAULT ''",
             "ALTER TABLE jobs ADD COLUMN remote BOOLEAN DEFAULT 0",
-            "ALTER TABLE jobs ADD COLUMN created_at DATETIME"
+            "ALTER TABLE jobs ADD COLUMN created_at DATETIME",
+            "ALTER TABLE job_applications ADD COLUMN applied_at DATETIME",
+            "ALTER TABLE job_applications ADD COLUMN expires_at DATETIME",
+            "ALTER TABLE job_applications ADD COLUMN url TEXT DEFAULT ''"
         ]
         for sql in migrations:
             try:
@@ -544,6 +560,24 @@ def init_db():
                 conn.commit()
             except Exception:
                 pass
+
+        # Backfill policy for existing applications without expiration timestamps:
+        # 1. Backfill applied_at = COALESCE(created_at, CURRENT_TIMESTAMP)
+        # 2. Backfill expires_at = datetime(applied_at, '+30 days')
+        try:
+            conn.execute(text("""
+                UPDATE job_applications
+                SET applied_at = COALESCE(created_at, CURRENT_TIMESTAMP)
+                WHERE applied_at IS NULL
+            """))
+            conn.execute(text("""
+                UPDATE job_applications
+                SET expires_at = datetime(applied_at, '+30 days')
+                WHERE expires_at IS NULL
+            """))
+            conn.commit()
+        except Exception:
+            pass
 
 def get_db():
     db = SessionLocal()

@@ -11,6 +11,7 @@ import { api } from '../services/api';
 export default function RecommendedJobs({ userProfile, onJobApplied }) {
   const [jobs, setJobs] = useState([]);
   const [connectors, setConnectors] = useState([]);
+  const [userApplications, setUserApplications] = useState([]);
   const [statesCatalog, setStatesCatalog] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -68,6 +69,28 @@ export default function RecommendedJobs({ userProfile, onJobApplied }) {
     }
   };
 
+  const fetchApplications = async () => {
+    try {
+      const data = await api.applications.list();
+      setUserApplications(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.warn('Failed to load user applications:', err);
+    }
+  };
+
+  const isJobApplied = (job) => {
+    if (!job || !userApplications.length) return false;
+    const jId = String(job.id || '');
+    const jTitle = (job.title || '').trim().toLowerCase();
+    const jCompany = (job.company || '').trim().toLowerCase();
+    return userApplications.some((app) => {
+      if (jId && app.job_id && String(app.job_id) === jId) return true;
+      const aRole = (app.role || '').trim().toLowerCase();
+      const aComp = (app.company || '').trim().toLowerCase();
+      return aRole === jTitle && aComp === jCompany;
+    });
+  };
+
   const fetchJobs = async () => {
     setLoading(true);
     try {
@@ -90,6 +113,7 @@ export default function RecommendedJobs({ userProfile, onJobApplied }) {
 
   useEffect(() => {
     fetchConnectors();
+    fetchApplications();
   }, []);
 
   useEffect(() => {
@@ -114,7 +138,7 @@ export default function RecommendedJobs({ userProfile, onJobApplied }) {
     }
   };
 
-  const handleApply = async (job) => {
+  const handleMarkApplied = async (job) => {
     setIsApplying(true);
     try {
       await api.applications.create({
@@ -123,12 +147,14 @@ export default function RecommendedJobs({ userProfile, onJobApplied }) {
         company: job.company,
         location: job.location,
         salary: job.salary,
+        url: job.url || '',
         status: 'Applied'
       });
 
-      setApplySuccessMsg(`Application to ${job.company} submitted! Added to Application Tracker.`);
+      setApplySuccessMsg(`Application to ${job.company} added to Application Tracker!`);
       setTimeout(() => setApplySuccessMsg(''), 4000);
       setSelectedJob(null);
+      await fetchApplications();
       if (onJobApplied) onJobApplied();
     } catch (err) {
       console.error('Apply error:', err);
@@ -136,6 +162,16 @@ export default function RecommendedJobs({ userProfile, onJobApplied }) {
       setIsApplying(false);
     }
   };
+
+  // Connected connectors only
+  const activeConnectors = connectors.filter(c => c.connected);
+
+  // Available source filter items
+  const sourceOptions = [
+    { id: 'All', label: 'All Live Feeds' },
+    ...activeConnectors.map(c => ({ id: c.name, label: c.name })),
+    { id: 'demo', label: 'Demo Dataset (Isolated)' }
+  ];
 
   return (
     <div className="p-6 md:p-8 space-y-6 w-full max-w-none text-slate-100">
@@ -170,8 +206,8 @@ export default function RecommendedJobs({ userProfile, onJobApplied }) {
         </div>
       </div>
 
-      {/* Live Connectors Status Ribbon */}
-      {connectors.length > 0 && (
+      {/* Live Connectors Status Ribbon - Only shows genuinely connected providers */}
+      {activeConnectors.length > 0 && (
         <div className="p-3.5 bg-[#0D132A]/80 rounded-2xl text-white flex flex-wrap items-center justify-between gap-3 backdrop-blur-xl border border-white/8 shadow-md">
           <div className="flex items-center gap-2">
             <Radio className="w-4 h-4 text-emerald-400 animate-pulse" />
@@ -179,19 +215,15 @@ export default function RecommendedJobs({ userProfile, onJobApplied }) {
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            {connectors.map((conn, idx) => (
+            {activeConnectors.map((conn, idx) => (
               <div 
                 key={idx}
-                className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold flex items-center gap-1.5 ${
-                  conn.connected 
-                    ? 'bg-emerald-500/15 border border-emerald-400/30 text-emerald-300' 
-                    : 'bg-white/5 border border-white/10 text-slate-400'
-                }`}
+                className="px-2.5 py-1 rounded-lg text-[11px] font-semibold flex items-center gap-1.5 bg-emerald-500/15 border border-emerald-400/30 text-emerald-300"
                 title={conn.message}
               >
-                <span className={`w-1.5 h-1.5 rounded-full ${conn.connected ? 'bg-emerald-400' : 'bg-slate-500'}`} />
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
                 <span>{conn.name}</span>
-                <span className="text-[10px] opacity-75 font-normal">({conn.status})</span>
+                <span className="text-[10px] opacity-75 font-normal">(Connected)</span>
               </div>
             ))}
           </div>
@@ -275,15 +307,7 @@ export default function RecommendedJobs({ userProfile, onJobApplied }) {
             <span className="text-[11px] font-bold text-slate-400 mr-1 flex items-center gap-1">
               <Filter className="w-3 h-3" /> Sources:
             </span>
-            {[
-              { id: 'All', label: 'All Live Feeds' },
-              { id: 'RemoteOK', label: 'RemoteOK' },
-              { id: 'Jobicy', label: 'Jobicy' },
-              { id: 'Arbeitnow', label: 'Arbeitnow' },
-              { id: 'Adzuna', label: 'Adzuna' },
-              { id: 'Jooble', label: 'Jooble' },
-              { id: 'demo', label: 'Demo Dataset (Isolated)' }
-            ].map((src) => (
+            {sourceOptions.map((src) => (
               <button
                 key={src.id}
                 onClick={() => setSelectedSource(src.id)}
@@ -370,6 +394,9 @@ export default function RecommendedJobs({ userProfile, onJobApplied }) {
               key={job.id}
               job={job}
               onViewDetails={(j) => setSelectedJob(j)}
+              isApplied={isJobApplied(job)}
+              onMarkApplied={handleMarkApplied}
+              isApplying={isApplying}
             />
           ))
         )}
@@ -380,7 +407,8 @@ export default function RecommendedJobs({ userProfile, onJobApplied }) {
         <JobDetailsModal
           job={selectedJob}
           onClose={() => setSelectedJob(null)}
-          onApply={handleApply}
+          onMarkApplied={handleMarkApplied}
+          isApplied={isJobApplied(selectedJob)}
           isApplying={isApplying}
         />
       )}
