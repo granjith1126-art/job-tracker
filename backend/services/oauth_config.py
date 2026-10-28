@@ -1,9 +1,19 @@
 import os
+from pathlib import Path
 from typing import Dict, Any, Optional
 from dotenv import load_dotenv
 
-# Ensure .env is loaded
-load_dotenv()
+# Multi-path .env loader: automatically checks backend dir, root dir, and current working dir
+_cur = Path(__file__).resolve().parent
+_candidates = [
+    _cur.parent / ".env",          # backend/.env
+    _cur.parent.parent / ".env",   # root/.env
+    Path.cwd() / "backend" / ".env",
+    Path.cwd() / ".env"
+]
+for _p in _candidates:
+    if _p.is_file():
+        load_dotenv(dotenv_path=_p, override=True)
 
 # Base URLs
 API_BASE_URL = os.environ.get("API_BASE_URL", "http://127.0.0.1:8000").rstrip("/")

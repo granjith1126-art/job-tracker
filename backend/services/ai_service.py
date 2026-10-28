@@ -5,13 +5,12 @@ from typing import Dict, Any, List, Optional
 from dotenv import load_dotenv
 
 # Ensure .env is loaded from backend directory or project root
-base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-env_path = os.path.join(base_dir, ".env")
-if os.path.exists(env_path):
-    load_dotenv(env_path)
-else:
-    load_dotenv()
-
+# Ensure .env is loaded from backend directory, root directory, or cwd
+from pathlib import Path
+_cur = Path(__file__).resolve().parent
+for _p in [_cur.parent / '.env', _cur.parent.parent / '.env', Path.cwd() / 'backend' / '.env', Path.cwd() / '.env']:
+    if _p.is_file():
+        load_dotenv(dotenv_path=_p, override=True)
 logger = logging.getLogger(__name__)
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")

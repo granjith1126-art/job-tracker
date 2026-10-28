@@ -1,6 +1,30 @@
 import asyncio
+import os
+import shutil
+from pathlib import Path
 from dotenv import load_dotenv
-load_dotenv()
+
+# Multi-path .env loader: works from VS Code workspace root, backend dir, or any runner
+_cur_dir = Path(__file__).resolve().parent
+_root_dir = _cur_dir.parent
+_candidates = [
+    _cur_dir / ".env",          # backend/.env
+    _root_dir / ".env",         # root/.env
+    Path.cwd() / "backend" / ".env",
+    Path.cwd() / ".env"
+]
+for _env_file in _candidates:
+    if _env_file.is_file():
+        load_dotenv(dotenv_path=_env_file, override=True)
+
+# Synchronize .env between root and backend so VS Code always has it regardless of working directory
+try:
+    if (_cur_dir / ".env").is_file() and not (_root_dir / ".env").is_file():
+        shutil.copyfile(_cur_dir / ".env", _root_dir / ".env")
+    elif (_root_dir / ".env").is_file() and not (_cur_dir / ".env").is_file():
+        shutil.copyfile(_root_dir / ".env", _cur_dir / ".env")
+except Exception:
+    pass
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -47,11 +71,12 @@ async def on_startup():
     # Launch background scheduler
     asyncio.create_task(periodic_expired_cleanup())
 
-    import os
     from services.oauth_config import is_provider_configured
     print(f"GitHub OAuth: {'configured' if is_provider_configured('github') else 'not configured'}")
     print(f"Google OAuth: {'configured' if is_provider_configured('google') else 'not configured'}")
-    print(f"YouTube API: {'configured' if bool(os.environ.get('YOUTUBE_API_KEY')) else 'not configured'}")
+    print(f"Instagram OAuth: {'configured' if is_provider_configured('instagram') else 'not configured'}")
+    print(f"Gemini API: {'configured' if bool(os.environ.get('GEMINI_API_KEY')) else 'not configured'}")
+    print(f"OpenAI API: {'configured' if bool(os.environ.get('OPENAI_API_KEY')) else 'not configured'}")
 
 @app.get("/")
 def root():
